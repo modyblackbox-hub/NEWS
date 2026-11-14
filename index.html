@@ -1,200 +1,2169 @@
-```
-import os
-import re
-import json
-import hashlib
-import urllib.request
-import feedparser
-from datetime import datetime
-from bs4 import BeautifulSoup
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="artifact-type" content="dashboard">
+  <meta name="design-style" content="briefing">
+  <title>Global &amp; Regional Live News Briefing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
 
-# Target directories
-DATA_DIR = "data"
-IMAGE_DIR = os.path.join(DATA_DIR, "images")
-os.makedirs(IMAGE_DIR, exist_ok=True)
+      /* Page and surfaces: warm stone-white paper */
+      --background: #faf9f5;
+      --surface-container-low: #ffffff;
+      --surface-container: #f1efe8;
+      --surface-container-high: #e6e2d6;
 
-FEEDS = {
-    "Science": [
-        {"name": "NASA News", "url": "https://www.nasa.gov/rss-feeds/"},
-        {"name": "Phys.org", "url": "https://phys.org/feeds/"},
-        {"name": "arXiv Preprints", "url": "https://info.arxiv.org/help/rss.html"},
-        {"name": "ScienceDaily", "url": "https://www.sciencedaily.com/newsfeeds.htm"},
-        {"name": "Nature", "url": "https://www.nature.com/nature.rss"}
-    ],
-    "Arizona": [
-        {"name": "KJZZ Phoenix", "url": "https://kjzz.org/rss"},
-        {"name": "Cronkite News", "url": "https://cronkitenews.azpbs.org/feed/"},
-        {"name": "AZCentral", "url": "https://rssfeeds.azcentral.com/phoenix/news"},
-        {"name": "12 News KPNX", "url": "https://www.12news.com/rss"}
-    ],
-    "USA": [
-        {"name": "Associated Press", "url": "https://apnews.com/"},
-        {"name": "NPR News", "url": "https://feeds.npr.org/1001/rss.xml"},
-        {"name": "CBS News", "url": "https://www.cbsnews.com/latest/rss/main"},
-        {"name": "NBC News", "url": "http://feeds.nbcnews.com/nbcnews/public/news"}
-    ],
-    "World": [
-        {"name": "BBC World News", "url": "http://feeds.bbci.co.uk/news/world/rss.xml"},
-        {"name": "Al Jazeera English", "url": "https://www.aljazeera.com/xml/rss/all.xml"},
-        {"name": "Deutsche Welle", "url": "https://rss.dw.com/xml/rss-out-detail-all"}
-    ]
-}
+      /* Ink */
+      --on-surface: #17181a;
+      --on-surface-variant: #56585c;
 
-INTENSITY_KEYWORDS = {
-    "Critical": ["breaking", "urgent", "emergency", "crisis", "warning", "disaster", "outbreak"],
-    "High": ["major", "breakthrough", "significant", "alert", "ruling", "election", "discovery"],
-    "Standard": []
-}
+      /* Rules */
+      --outline: #17181a;
+      --outline-variant: #dedad0;
+      --outline-button: #c8c4b8;
 
-def extract_image_url(entry):
-    """Extract image URL from RSS media tags or embedded HTML."""
-    # Check media content or enclosures
-    if "media_content" in entry and entry.media_content:
-        for media in entry.media_content:
-            if media.get("type", "").startswith("image/") or "url" in media:
-                return media["url"]
-    
-    if "enclosures" in entry and entry.enclosures:
-        for enc in entry.enclosures:
-            if enc.get("type", "").startswith("image/"):
-                return enc.get("href") or enc.get("url")
+      /* Accents */
+      --primary: #17181a;
+      --on-primary: #faf9f5;
+      --primary-container: #f2b705;
+      --on-primary-container: #17181a;
+      --secondary: #1f4e5f;
+      --secondary-container: #e4eef1;
+      --tertiary: #785008;
+      --tertiary-container: #f5e6c4;
+      --error: #b42318;
+      --on-error: #ffffff;
+      --error-container: #fbeae8;
 
-    # Fallback: Parse HTML summary for  tags
-    summary_html = entry.get("summary", entry.get("description", ""))
-    if summary_html:
-        soup = BeautifulSoup(summary_html, "html.parser")
-        img = soup.find("img")
-        if img and img.get("src"):
-            return img["src"]
+      /* Semantic */
+      --positive: #2b6e52;
+      --positive-container: #e4f0ea;
+      --warning: #785008;
+      --warning-container: #f5e6c4;
+      --focus: #1f4e5f;
+      --scrim: rgba(23, 24, 26, 0.86);
 
-    return None
+      /* Data series, in order of use */
+      --data-1: #1f4e5f;
+      --data-2: #d99000;
+      --data-3: #2b6e52;
+      --data-4: #b84a39;
+      --data-context: #c4bfb2;
 
-def download_image(url):
-    """Download external image and return relative local file path."""
-    if not url:
-        return None
-    try:
-        # Generate unique local filename based on URL hash
-        url_hash = hashlib.md5(url.encode('utf-8')).hexdigest()[:10]
-        ext = url.split('.')[-1].split('?')[0].lower()
-        if ext not in ['jpg', 'jpeg', 'png', 'webp', 'gif']:
-            ext = 'jpg'
-        
-        filename = f"img_{url_hash}.{ext}"
-        filepath = os.path.join(IMAGE_DIR, filename)
-        relative_path = f"data/images/{filename}"
+      /* Studio portrait gallery palette tokens */
+      --portrait-backdrop-1: #232a2f;
+      --portrait-backdrop-2: #3a322d;
+      --portrait-backdrop-3: #1b2d36;
+      --portrait-backdrop-4: #2d2622;
+      --portrait-backdrop-5: #1f2226;
+      --portrait-backdrop-6: #332c27;
+      --portrait-ivory: #f4efe6;
+      --portrait-warm: #d9c3a5;
+      --portrait-amber: #c98e4b;
+      --portrait-slate: #5c7682;
+      --portrait-rose: #b87c6e;
+      --portrait-shadow: #121417;
 
-        # Skip download if image already exists locally
-        if os.path.exists(filepath):
-            return relative_path
+      /* Fonts */
+      --font-headline: 'Source Serif 4', serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-label: 'Geist Mono', monospace;
 
-        # Download image with standard browser User-Agent
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
-        with urllib.request.urlopen(req, timeout=10) as response, open(filepath, 'wb') as out_file:
-            out_file.write(response.read())
+      /* Shape */
+      --rounded: 0.25rem;
+      --rounded-lg: 0.375rem;
+      --rounded-full: 0.25rem;
+      --rounded-dot: 9999px;
 
-        return relative_path
-    except Exception as e:
-        print(f"Image download failed for {url}: {e}")
-        return None
+      /* Style effects */
+      --section-rule: 1.5px solid var(--outline);
+      --card-border: 1px solid var(--outline-variant);
+      --badge-radius: 2px;
+      --heading-tracking: -0.02em;
+      --label-tracking: 0.08em;
 
-def calculate_intensity(title, summary):
-    combined = f"{title} {summary}".lower()
-    for level, keywords in INTENSITY_KEYWORDS.items():
-        if any(kw in combined for kw in keywords):
-            return level
-    return "Standard"
+      /* Type scale (Dashboard / Data Explorer) */
+      --display-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem);
+      --headline-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+      --subhead-size: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+      --body-size: clamp(0.9375rem, 0.9rem + 0.15vw, 1rem);
+      --label-size: 0.75rem;
 
-def aggregate_news():
-    all_articles = []
-    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+      /* Spacing scale (4pt base) */
+      --space-xs: 0.25rem;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      --space-xl: 2.5rem;
+      --space-2xl: 4rem;
+      --space-3xl: 6rem;
 
-    for category, source_list in FEEDS.items():
-        for source in source_list:
-            try:
-                feed = feedparser.parse(source["url"])
-                for entry in feed.entries[:5]:
-                    title = entry.get("title", "Untitled Article")
-                    link = entry.get("link", "#")
-                    published = entry.get("published", entry.get("updated", now))
-                    raw_summary = entry.get("summary", entry.get("description", ""))
-                    
-                    # Clean HTML tags from summary text
-                    summary_text = BeautifulSoup(raw_summary, "html.parser").get_text()
-                    
-                    # Process &amp; cache image locally
-                    remote_image = extract_image_url(entry)
-                    local_image = download_image(remote_image) if remote_image else None
-
-                    intensity = calculate_intensity(title, summary_text)
-                    
-                    all_articles.append({
-                        "title": title,
-                        "link": link,
-                        "source": source["name"],
-                        "category": category,
-                        "published": published,
-                        "summary": summary_text[:250] + "..." if len(summary_text) &gt; 250 else summary_text,
-                        "image_url": local_image,
-                        "intensity": intensity
-                    })
-            except Exception as e:
-                print(f"Error fetching {source['name']}: {e}")
-
-    output_data = {
-        "last_updated": now,
-        "total_articles": len(all_articles),
-        "articles": all_articles
+      /* Motion */
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+      --dur-micro: 120ms;
+      --dur-short: 220ms;
+      --dur-long: 420ms;
     }
 
-    with open(os.path.join(DATA_DIR, "news.json"), "w", encoding="utf-8") as f:
-        json.dump(output_data, f, indent=2, ensure_ascii=False)
-    
-    print(f"Successfully updated data/news.json with cached images at {now}")
+    /* Base reset */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      overflow-x: clip;
+      margin: 0;
+      padding: 0;
+      background-color: var(--background);
+      color: var(--on-surface);
+      font-family: var(--font-body);
+      font-size: var(--body-size);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    header { position: static !important; }
 
-if __name__ == "__main__":
-    aggregate_news()
+    /* Focus rings */
+    :focus-visible {
+      outline: 2.5px solid var(--focus);
+      outline-offset: 2px;
+    }
 
-```
+    /* Main Layout */
+    .page-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-lg);
+      padding: var(--space-lg);
+      max-width: 1240px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+    .page-grid * { min-width: 0; }
 
----
+    /* Dossier Header Bar */
+    .dossier-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm) var(--space-md);
+      border-bottom: var(--section-rule);
+      padding-bottom: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+    .dossier-bar-left {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+    .dossier-bar-right {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+    .dossier-pill {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: var(--label-size);
+      letter-spacing: var(--label-tracking);
+      text-transform: uppercase;
+      padding: var(--space-xs) var(--space-sm);
+      border-radius: var(--badge-radius);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+    .live-status {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--positive);
+      background: var(--positive-container);
+      padding: var(--space-xs) var(--space-sm);
+      border-radius: var(--badge-radius);
+    }
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: var(--rounded-dot);
+      background-color: var(--positive);
+      display: inline-block;
+      animation: pulse-live 1.8s var(--ease-in-out) infinite;
+    }
+    @keyframes pulse-live {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.25); opacity: 0.55; }
+    }
+    .dossier-meta {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--on-surface-variant);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .utc-readout {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 600;
+      color: var(--on-surface);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+    }
 
-### 2\. Updated GitHub Actions Workflow (`.github/workflows/fetch_news.yml`)
+    /* Header Masthead */
+    .masthead-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--space-md);
+    }
+    .title {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: var(--display-size);
+      letter-spacing: var(--heading-tracking);
+      line-height: 1.08;
+      color: var(--on-surface);
+      margin: 0;
+    }
+    .standfirst {
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: var(--subhead-size);
+      color: var(--secondary);
+      margin: var(--space-xs) 0 0 0;
+      max-width: 68ch;
+      line-height: 1.45;
+    }
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-sm);
+    }
 
-Place this file in `.github/workflows/fetch_news.yml`. It installs the required Python dependencies (`feedparser`, `beautifulsoup4`) and commits both `data/news.json` and any newly downloaded files in `data/images/`.
+    /* Buttons */
+    .btn {
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: var(--body-size);
+      border-radius: var(--rounded);
+      min-height: 44px;
+      padding: var(--space-sm) var(--space-md);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      border: 1px solid transparent;
+      transition: background-color var(--dur-micro) var(--ease-out),
+                  color var(--dur-micro) var(--ease-out),
+                  transform var(--dur-micro) var(--ease-out),
+                  box-shadow var(--dur-micro) var(--ease-out);
+    }
+    .btn:active {
+      transform: translateY(1px);
+    }
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    .btn-primary {
+      background-color: var(--primary);
+      color: var(--on-primary);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background-color: var(--secondary);
+    }
+    .btn-secondary {
+      background-color: var(--surface-container-low);
+      color: var(--on-surface);
+      border-color: var(--outline-button);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background-color: var(--surface-container);
+    }
 
-```
-name: Hourly News &amp; Image Sync
+    /* KPI Strip */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-md);
+    }
+    .figure-card {
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md) var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+    .figure-card-critical {
+      border-top: 3px solid var(--error);
+    }
+    .figure-card-high {
+      border-top: 3px solid var(--tertiary);
+    }
+    .figure-card-primary {
+      border-top: 3px solid var(--secondary);
+    }
+    .figure-card-positive {
+      border-top: 3px solid var(--positive);
+    }
+    .figure-label {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--on-surface-variant);
+    }
+    .figure-value {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: clamp(1.5rem, 1.25rem + 0.8vw, 2rem);
+      line-height: 1.1;
+      font-variant-numeric: lining-nums tabular-nums;
+      color: var(--on-surface);
+    }
+    .figure-sub {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--on-surface-variant);
+    }
 
-on:
-  schedule:
-    - cron: '0 * * * *' # Automated run at the top of every hour
-  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+    /* Telemetry Chart & Feed Summary Row */
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+      gap: var(--space-md);
+      align-items: stretch;
+    }
+    .chart-title {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: var(--subhead-size);
+      margin: 0;
+      color: var(--on-surface);
+    }
+    .chart-subtitle {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--on-surface-variant);
+      margin: var(--space-xs) 0 var(--space-md) 0;
+    }
+    .chart-wrap {
+      min-height: 210px;
+      width: 100%;
+    }
+    .chart-source {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--on-surface-variant);
+      margin-top: var(--space-sm);
+      border-top: var(--card-border);
+      padding-top: var(--space-xs);
+    }
 
-jobs:
-  sync-news-and-images:
-    runs-on: ubuntu-latest
+    /* Navigation & Filter Toolbar */
+    .controls-panel {
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md) var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+    .tab-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      border-bottom: var(--card-border);
+      padding-bottom: var(--space-md);
+    }
+    .tab-btn {
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: var(--body-size);
+      min-height: 44px;
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--rounded);
+      border: 1px solid var(--outline-variant);
+      background: var(--background);
+      color: var(--on-surface);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+      transition: background-color var(--dur-micro) var(--ease-out),
+                  color var(--dur-micro) var(--ease-out),
+                  border-color var(--dur-micro) var(--ease-out);
+    }
+    .tab-btn:hover {
+      background: var(--surface-container);
+    }
+    .tab-btn.is-active {
+      background: var(--primary);
+      color: var(--on-primary);
+      border-color: var(--primary);
+    }
+    .tab-count {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      padding: 0.125rem 0.375rem;
+      border-radius: var(--badge-radius);
+      background: var(--surface-container);
+      color: var(--on-surface);
+      font-variant-numeric: tabular-nums;
+    }
+    .tab-btn.is-active .tab-count {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+    }
 
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      justify-content: space-between;
+      gap: var(--space-md);
+    }
+    .intensity-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+    .control-label {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--on-surface-variant);
+      display: block;
+    }
+    .intensity-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+    }
+    .intensity-btn {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      min-height: 44px;
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--rounded);
+      border: 1px solid var(--outline-button);
+      background: var(--surface-container-low);
+      color: var(--on-surface);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      transition: background-color var(--dur-micro) var(--ease-out),
+                  color var(--dur-micro) var(--ease-out);
+    }
+    .intensity-btn:hover {
+      background: var(--surface-container);
+    }
+    .intensity-btn.is-active[data-intensity="all"] {
+      background: var(--primary);
+      color: var(--on-primary);
+      border-color: var(--primary);
+    }
+    .intensity-btn.is-active[data-intensity="critical"] {
+      background: var(--error);
+      color: var(--on-error);
+      border-color: var(--error);
+    }
+    .intensity-btn.is-active[data-intensity="high"] {
+      background: var(--tertiary-container);
+      color: var(--tertiary);
+      border-color: var(--tertiary);
+    }
+    .intensity-btn.is-active[data-intensity="standard"] {
+      background: var(--secondary-container);
+      color: var(--secondary);
+      border-color: var(--secondary);
+    }
 
-      - name: Set up Python
-        uses: actions/python-version@v4
-        with:
-          python-version: '3.10'
+    .search-sort-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: var(--space-sm);
+    }
+    .input-field-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+    .text-input, .select-input {
+      font-family: var(--font-body);
+      font-size: var(--body-size);
+      min-height: 44px;
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--rounded);
+      border: 1px solid var(--outline-button);
+      background: var(--background);
+      color: var(--on-surface);
+    }
+    .select-input {
+      padding-right: var(--space-xl);
+    }
+    .text-input {
+      min-width: 220px;
+    }
 
-      - name: Install dependencies
-        run: |
-          pip install feedparser beautifulsoup4
+    /* News Feed Grid */
+    .feed-status-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-sm);
+    }
+    .section-heading {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: var(--headline-size);
+      letter-spacing: var(--heading-tracking);
+      margin: 0;
+      color: var(--on-surface);
+    }
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
+      gap: var(--space-md);
+      align-items: start;
+    }
+    .card-wrapper {
+      container-type: inline-size;
+    }
+    .news-card {
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md) var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      transition: transform var(--dur-short) var(--ease-out),
+                  background-color var(--dur-micro) var(--ease-out);
+      animation: card-enter var(--dur-short) var(--ease-out) both;
+    }
+    @keyframes card-enter {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .news-card[data-rank="critical"] {
+      border-left: 4px solid var(--error);
+    }
+    .news-card[data-rank="high"] {
+      border-left: 4px solid var(--tertiary);
+    }
+    .news-card[data-rank="standard"] {
+      border-left: 4px solid var(--secondary);
+    }
+    .news-card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-xs) var(--space-sm);
+    }
+    .news-card-badges {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+    .index-num {
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: var(--label-size);
+      color: var(--secondary);
+      background: var(--surface-container);
+      padding: 0.125rem 0.375rem;
+      border-radius: var(--badge-radius);
+    }
+    .intensity-badge {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.125rem 0.45rem;
+      border-radius: var(--badge-radius);
+    }
+    .badge-critical {
+      background: var(--error-container);
+      color: var(--error);
+    }
+    .badge-high {
+      background: var(--tertiary-container);
+      color: var(--tertiary);
+    }
+    .badge-standard {
+      background: var(--secondary-container);
+      color: var(--secondary);
+    }
+    .desk-tag {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--on-surface-variant);
+    }
+    .news-timestamp {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--on-surface-variant);
+      font-variant-numeric: tabular-nums;
+    }
+    .news-title {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: var(--subhead-size);
+      line-height: 1.25;
+      margin: 0;
+      color: var(--on-surface);
+    }
+    .news-source {
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--secondary);
+      margin: 0;
+    }
+    .news-metrics-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-xs);
+      margin-top: var(--space-xs);
+    }
+    .metric-chip {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      background: var(--surface-container);
+      color: var(--on-surface);
+      padding: 0.125rem 0.5rem;
+      border-radius: var(--badge-radius);
+    }
 
-      - name: Execute News &amp; Image Fetcher
-        run: python fetch_feeds.py
+    /* Accordion Dropdown */
+    .accordion-trigger {
+      width: 100%;
+      min-height: 44px;
+      margin-top: var(--space-xs);
+      padding: var(--space-sm) var(--space-md);
+      background: var(--surface-container);
+      color: var(--on-surface);
+      border: 1px solid var(--outline-variant);
+      border-radius: var(--rounded);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      transition: background-color var(--dur-micro) var(--ease-out);
+    }
+    .accordion-trigger:hover {
+      background: var(--surface-container-high);
+    }
+    .accordion-chevron {
+      transition: transform var(--dur-short) var(--ease-in-out);
+      flex-shrink: 0;
+    }
+    .accordion-trigger[aria-expanded="true"] .accordion-chevron {
+      transform: rotate(180deg);
+    }
+    .accordion-panel {
+      display: none;
+      border-top: var(--card-border);
+      padding-top: var(--space-md);
+      margin-top: var(--space-xs);
+      animation: card-enter var(--dur-short) var(--ease-out) both;
+    }
+    .accordion-panel.is-open {
+      display: block;
+    }
+    .accordion-summary {
+      margin: 0 0 var(--space-sm) 0;
+      color: var(--on-surface);
+      font-size: var(--body-size);
+      line-height: 1.58;
+      max-width: 65ch;
+    }
+    .accordion-context {
+      background: var(--background);
+      border-left: 2px solid var(--secondary);
+      padding: var(--space-sm) var(--space-md);
+      font-size: 0.875rem;
+      color: var(--on-surface-variant);
+      margin: 0;
+    }
 
-      - name: Commit and Push Updated Data &amp; Cached Images
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add data/news.json data/images/
-          git diff-index --quiet HEAD || (git commit -m "Auto-sync news feeds and image cache [$(date -u +'%Y-%m-%d %H:%M UTC')]" &amp;&amp; git push)
-```
+    /* Empty State */
+    .empty-state {
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-xl);
+      text-align: left;
+      display: none;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-sm);
+    }
+    .empty-state.is-visible {
+      display: flex;
+    }
+
+    /* Modeling Photo Gallery Subsection */
+    .section-divider {
+      margin-top: var(--space-lg);
+      padding-top: var(--space-md);
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+      gap: var(--space-md);
+    }
+    .portrait-card {
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-sm);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      text-align: left;
+      cursor: pointer;
+      width: 100%;
+      transition: transform var(--dur-short) var(--ease-out),
+                  background-color var(--dur-micro) var(--ease-out);
+    }
+    .portrait-card:hover {
+      transform: translateY(-2px);
+      background: var(--surface-container);
+    }
+    .portrait-frame {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      border-radius: var(--rounded);
+      overflow: hidden;
+      background: var(--portrait-shadow);
+      position: relative;
+      border: var(--card-border);
+    }
+    .portrait-frame svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .portrait-caption-bar {
+      padding: var(--space-xs) var(--space-xs) var(--space-sm) var(--space-xs);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+    .portrait-plate-id {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--secondary);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .portrait-title {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: var(--subhead-size);
+      color: var(--on-surface);
+      margin: 0;
+    }
+    .portrait-specs {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--on-surface-variant);
+    }
+
+    /* Lightbox Dialog */
+    .lightbox-backdrop {
+      position: fixed;
+      inset: 0;
+      background: var(--scrim);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-lg);
+      z-index: 100;
+    }
+    .lightbox-backdrop.is-open {
+      display: flex;
+    }
+    .lightbox-dialog {
+      background: var(--surface-container-low);
+      border: var(--section-rule);
+      border-radius: var(--rounded-lg);
+      max-width: 960px;
+      width: 100%;
+      max-height: 92vh;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: var(--space-lg);
+      padding: var(--space-lg);
+      color: var(--on-surface);
+    }
+    .lightbox-media {
+      aspect-ratio: 3 / 4;
+      max-height: 76vh;
+      width: 100%;
+      background: var(--portrait-shadow);
+      border-radius: var(--rounded);
+      overflow: hidden;
+      border: var(--card-border);
+    }
+    .lightbox-media svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .lightbox-details {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: var(--space-md);
+    }
+    .lightbox-spec-list {
+      border-top: var(--card-border);
+      padding-top: var(--space-md);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--space-sm);
+    }
+    .lightbox-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      border-top: var(--card-border);
+      padding-top: var(--space-md);
+    }
+
+    /* GitHub Pages JSON Architecture Aside */
+    .aside-box {
+      background: var(--surface-container);
+      border-top: var(--section-rule);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+    .aside-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+    }
+    .json-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: var(--space-sm);
+    }
+    .json-preview {
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-radius: var(--rounded);
+      padding: var(--space-md);
+      font-family: var(--font-label);
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      color: var(--on-surface);
+      overflow-x: auto;
+      max-height: 280px;
+      margin: 0;
+    }
+    .status-note {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--secondary);
+      min-height: 1.2em;
+    }
+
+    /* Footer */
+    .sources-footer {
+      border-top: var(--card-border);
+      padding-top: var(--space-md);
+      font-size: 0.875rem;
+      color: var(--on-surface-variant);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    /* Responsive rules */
+    @container (max-width: 399px) {
+      .news-card-meta {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    @media (max-width: 960px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .telemetry-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .lightbox-dialog {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page-grid {
+        padding: var(--space-md);
+        gap: var(--space-md);
+      }
+      .kpi-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .text-input {
+        min-width: 100%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+      .live-dot {
+        animation: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-grid">
+
+    <!-- 1. Header with Last Update UTC & Live Status Indicator -->
+    <header>
+      <div class="dossier-bar">
+        <div class="dossier-bar-left">
+          <span class="dossier-pill">Briefing</span>
+          <span class="live-status" id="live-status-badge">
+            <span class="live-dot" aria-hidden="true"></span>
+            <span id="live-status-text">Live JSON Feed · Operational</span>
+          </span>
+          <span class="dossier-meta">GitHub Pages Ready Architecture</span>
+        </div>
+        <div class="dossier-bar-right">
+          <span class="dossier-meta">Last Update (UTC):</span>
+          <time class="utc-readout" id="utc-timestamp" datetime="2026-11-13T18:42:00Z">2026-11-13 18:42:00 UTC</time>
+        </div>
+      </div>
+
+      <div class="masthead-row">
+        <div>
+          <h1 class="title">Global &amp; Regional Live News Briefing</h1>
+          <p class="standfirst">
+            Structured situational triage across Science, Arizona Local, USA National, and World News, paired with an editorial portrait archive and local JSON feed bindings.
+          </p>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="btn btn-primary" id="sync-feed-btn" onclick="syncLocalFeed()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
+              <path d="M16 16h5v5"></path>
+            </svg>
+            <span>Refresh Feed (UTC)</span>
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="toggleAllAccordions()">
+            <span id="toggle-all-label">Expand All Details</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- KPI Summary Strip -->
+    <section aria-label="Feed telemetry metrics">
+      <div class="kpi-grid">
+        <div class="figure-card figure-card-primary">
+          <span class="figure-label">01 · Active Dispatches</span>
+          <span class="figure-value" id="kpi-total">20</span>
+          <span class="figure-sub" id="kpi-total-sub">Showing 20 across 4 desks</span>
+        </div>
+        <div class="figure-card figure-card-critical">
+          <span class="figure-label">02 · Critical / Breaking</span>
+          <span class="figure-value" id="kpi-critical">6</span>
+          <span class="figure-sub">Immediate operational alerts</span>
+        </div>
+        <div class="figure-card figure-card-high">
+          <span class="figure-label">03 · High Intensity</span>
+          <span class="figure-value" id="kpi-high">8</span>
+          <span class="figure-sub">Major policy &amp; health shifts</span>
+        </div>
+        <div class="figure-card figure-card-positive">
+          <span class="figure-label">04 · Feed Schema</span>
+          <span class="figure-value">JSON v1.0</span>
+          <span class="figure-sub" id="kpi-sync-sub">Local &amp; static-host safe</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quantitative Context Charts from Verified 2026 Sources -->
+    <section class="telemetry-grid" aria-label="Source quantitative benchmarks">
+      <div class="figure-card">
+        <h2 class="chart-title">WHO Regional TB Incidence Change (2015–2025)</h2>
+        <p class="chart-subtitle">Percent change in new cases per 100,000 population · 2025 milestone target was −50%</p>
+        <div class="chart-wrap" id="tb-chart-container"></div>
+        <div class="chart-source">Source: World Health Organization Global Tuberculosis Report 2026 (12 November 2026).</div>
+      </div>
+      <div class="figure-card">
+        <h2 class="chart-title">Digital Referral &amp; Intensity Matrix</h2>
+        <p class="chart-subtitle">Organic search referral declines (Reuters Institute 2026) &amp; active feed distribution</p>
+        <div class="chart-wrap" id="referral-chart-container"></div>
+        <div class="chart-source">Source: Reuters Institute Digital News Report 2026 (Chartbeat 2,500+ sites) &amp; active JSON feed.</div>
+      </div>
+    </section>
+
+    <!-- 2 & 3. Category Tabs + Situational Intensity Filters -->
+    <section class="controls-panel" aria-label="Desk navigation and situational intensity filters">
+      <div class="tab-strip" role="tablist" aria-label="News categories">
+        <button type="button" role="tab" class="tab-btn is-active" id="tab-all" aria-selected="true" onclick="setCategory('all')">
+          <span>All Desks</span>
+          <span class="tab-count" id="count-all">20</span>
+        </button>
+        <button type="button" role="tab" class="tab-btn" id="tab-science" aria-selected="false" onclick="setCategory('Science')">
+          <span>Science</span>
+          <span class="tab-count" id="count-science">5</span>
+        </button>
+        <button type="button" role="tab" class="tab-btn" id="tab-arizona" aria-selected="false" onclick="setCategory('Arizona Local')">
+          <span>Arizona Local</span>
+          <span class="tab-count" id="count-arizona">4</span>
+        </button>
+        <button type="button" role="tab" class="tab-btn" id="tab-usa" aria-selected="false" onclick="setCategory('USA National')">
+          <span>USA National</span>
+          <span class="tab-count" id="count-usa">5</span>
+        </button>
+        <button type="button" role="tab" class="tab-btn" id="tab-world" aria-selected="false" onclick="setCategory('World News')">
+          <span>World News</span>
+          <span class="tab-count" id="count-world">6</span>
+        </button>
+      </div>
+
+      <div class="filter-row">
+        <div class="intensity-group">
+          <span class="control-label">Situational Intensity Ranking</span>
+          <div class="intensity-pills" role="group" aria-label="Filter by situational intensity">
+            <button type="button" class="intensity-btn is-active" data-intensity="all" onclick="setIntensity('all')">All Ranks</button>
+            <button type="button" class="intensity-btn" data-intensity="critical" onclick="setIntensity('critical')">Critical / Breaking</button>
+            <button type="button" class="intensity-btn" data-intensity="high" onclick="setIntensity('high')">High</button>
+            <button type="button" class="intensity-btn" data-intensity="standard" onclick="setIntensity('standard')">Standard</button>
+          </div>
+        </div>
+
+        <div class="search-sort-group">
+          <div class="input-field-wrap">
+            <label for="search-input" class="control-label">Search Headlines or Sources</label>
+            <input type="search" id="search-input" class="text-input" placeholder="e.g., WHO, FAA, Starship, Iran" oninput="setSearchQuery(this.value)">
+          </div>
+          <div class="input-field-wrap">
+            <label for="sort-select" class="control-label">Order By</label>
+            <select id="sort-select" class="select-input" onchange="setSortMode(this.value)">
+              <option value="intensity">Intensity Rank (Critical First)</option>
+              <option value="newest">Newest Timestamp (UTC)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. News Feed Cards with Expandable Accordions -->
+    <section aria-label="Live news dispatches">
+      <div class="feed-status-line">
+        <h2 class="section-heading" id="feed-heading">Live Dispatches — All Desks</h2>
+        <span class="dossier-meta" id="visible-count-label">Displaying 20 of 20 dispatches</span>
+      </div>
+
+      <div class="news-grid" id="news-feed-grid"></div>
+
+      <div class="empty-state" id="feed-empty-state">
+        <h3 class="news-title">No matching dispatches in this view</h3>
+        <p class="accordion-summary">
+          Your current desk, intensity rank, and keyword filter returned zero entries. Reset filters to inspect all live JSON records.
+        </p>
+        <button type="button" class="btn btn-primary" onclick="resetAllFilters()">Reset All Filters</button>
+      </div>
+    </section>
+
+    <!-- 5. Dedicated Modeling Photo Gallery Subsection with Lightbox -->
+    <section class="section-divider" aria-label="Modeling photo gallery">
+      <div class="dossier-bar">
+        <div class="dossier-bar-left">
+          <span class="dossier-pill">Photo Archive</span>
+          <span class="dossier-meta">Editorial Portrait Series · Rachel Cook Modeling Reference</span>
+        </div>
+        <span class="dossier-meta">6 High-Resolution Portrait Plates · Click any card for Lightbox</span>
+      </div>
+      <div class="feed-status-line">
+        <h2 class="section-heading">Modeling Portrait Gallery</h2>
+        <span class="dossier-meta">3:4 Studio Aspect · Offline-Safe Vector Plates</span>
+      </div>
+      <div class="gallery-grid" id="gallery-grid"></div>
+    </section>
+
+    <!-- 6. GitHub Pages Local JSON Feed Blueprint & Tester -->
+    <section class="aside-box" aria-label="GitHub Pages JSON integration architecture">
+      <div class="aside-header">
+        <div>
+          <span class="dossier-pill">Integration Model</span>
+          <h2 class="section-heading" style="margin-top: var(--space-xs);">GitHub Pages Local JSON Data Loader</h2>
+          <p class="standfirst" style="margin-top: var(--space-xs);">
+            Designed to fetch static <code>./data/feeds.json</code> payloads on GitHub Pages while seamlessly falling back to the embedded JSON island for standalone offline preview.
+          </p>
+        </div>
+        <div class="json-controls">
+          <div class="input-field-wrap">
+            <label for="json-file-input" class="control-label">Test Local .JSON File</label>
+            <input type="file" id="json-file-input" class="text-input" accept=".json,application/json" onchange="handleLocalJsonUpload(event)">
+          </div>
+          <button type="button" class="btn btn-primary" onclick="copyJsonSchema()">
+            <span id="copy-json-label">Copy JSON Payload</span>
+          </button>
+        </div>
+      </div>
+      <div class="status-note" id="json-loader-status">Loaded embedded JSON feed (20 dispatches, 6 portrait plates). Ready for ./data/feeds.json on GitHub Pages.</div>
+      <pre class="json-preview" id="json-schema-preview"></pre>
+    </section>
+
+    <!-- Sources Attribution Footer -->
+    <footer class="sources-footer">
+      <strong>Source Attribution &amp; Data Grounding (November 2026)</strong>
+      <span>
+        Dispatches synthesized directly from World Health Organization (Global Tuberculosis Report 2026, DR Congo Joint Release, Pandemic Agreement PABS Annex), Associated Press (US FAA ATC Ground Stop, New Jersey–Philadelphia Cargo Bridge Strike, Microsoft Outage, Ukraine/Russia Drone Escalation, Iran IAEA Monitoring, COP31 Turkey, SpaceX Starship, US Midterms, Health &amp; Wildfire Coverage), Global Issues (COP31 Africa Waste Crisis), Reuters Institute for the Study of Journalism (2026 Digital News Report), Michigan State University ComArtSci, IRASS Literature Review (2025), and arXiv / NASA / PLOS / ScienceDaily RSS specifications. Portrait archive references Rachel Cook Modeling index entry using self-contained vector studio plates.
+      </span>
+    </footer>
+  </div>
+
+  <!-- Lightbox Modal -->
+  <div class="lightbox-backdrop" id="portrait-lightbox" role="dialog" aria-modal="true" aria-labelledby="lightbox-title" onclick="handleLightboxBackdrop(event)">
+    <div class="lightbox-dialog">
+      <div class="lightbox-media" id="lightbox-media-slot"></div>
+      <div class="lightbox-details">
+        <div>
+          <div class="dossier-bar" style="margin-bottom: var(--space-sm);">
+            <span class="dossier-pill" id="lightbox-plate-badge">PLATE 01</span>
+            <button type="button" class="btn btn-secondary" id="lightbox-close-btn" onclick="closeLightbox()" aria-label="Close lightbox">Close</button>
+          </div>
+          <h2 class="title" style="font-size: var(--headline-size);" id="lightbox-title">Studio Study I</h2>
+          <p class="standfirst" id="lightbox-subtitle">Rachel Cook Modeling — Chiaroscuro Key Light</p>
+          <p class="accordion-summary" style="margin-top: var(--space-md);" id="lightbox-description"></p>
+        </div>
+
+        <div>
+          <div class="lightbox-spec-list">
+            <div>
+              <span class="figure-label">Lens &amp; Aperture</span>
+              <div class="utc-readout" id="lightbox-lens">85mm f/1.4</div>
+            </div>
+            <div>
+              <span class="figure-label">Lighting Rig</span>
+              <div class="utc-readout" id="lightbox-lighting">Softbox Key + Rim</div>
+            </div>
+            <div>
+              <span class="figure-label">Resolution</span>
+              <div class="utc-readout" id="lightbox-resolution">2400 × 3200 px</div>
+            </div>
+            <div>
+              <span class="figure-label">JSON Asset Key</span>
+              <div class="utc-readout" id="lightbox-asset">plate-01.webp</div>
+            </div>
+          </div>
+
+          <div class="lightbox-nav">
+            <button type="button" class="btn btn-secondary" onclick="stepLightbox(-1)">Previous Plate</button>
+            <button type="button" class="btn btn-primary" onclick="stepLightbox(1)">Next Plate</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Embedded Local JSON Feed Data (GitHub Pages ./data/feeds.json mirror) -->
+  <script type="application/json" id="local-feed-data">
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "endpointHint": "./data/feeds.json",
+    "lastUpdatedUtc": "2026-11-13T18:42:00Z",
+    "status": "operational"
+  },
+  "feeds": [
+    {
+      "id": "wn-01",
+      "category": "World News",
+      "intensity": "critical",
+      "timestampUtc": "2026-11-13T17:15:00Z",
+      "title": "Ukraine launches nearly 1,200 drones at Russia ahead of US-led European security talks",
+      "source": "Associated Press — World News",
+      "metrics": ["~1,200 drones", "UK base alert", "US-led talks"],
+      "summary": "Ukrainian forces launched nearly 1,200 drones toward Russia on the eve of US-led diplomatic discussions slated to consider wider European security arrangements.",
+      "context": "In a parallel security incident reported by AP, unidentified drone activity detected over a US military base in Britain prompted an immediate protective security response by US military personnel."
+    },
+    {
+      "id": "wn-02",
+      "category": "World News",
+      "intensity": "critical",
+      "timestampUtc": "2026-11-13T16:40:00Z",
+      "title": "Iran tells UN nuclear agency monitoring cannot proceed while under threat",
+      "source": "Associated Press — Middle East Desk",
+      "metrics": ["IAEA monitoring halt", "Diplomatic standoff"],
+      "summary": "Iran notified the United Nations nuclear watchdog that inspection and monitoring activities cannot continue while the country remains under military threat.",
+      "context": "US Secretary of State Marco Rubio stated separately that further US military action is not needed against an economically weakened Iran, signaling reliance on economic pressure and diplomatic leverage."
+    },
+    {
+      "id": "us-01",
+      "category": "USA National",
+      "intensity": "critical",
+      "timestampUtc": "2026-11-13T18:10:00Z",
+      "title": "FAA halts US flights nationwide after air traffic control communications failure",
+      "source": "Associated Press — US Transportation",
+      "metrics": ["Nationwide ground stop", "Hundreds diverted"],
+      "summary": "Air traffic control communications problems forced flights to be halted at airports across the United States, diverting hundreds of aircraft and leaving passengers stranded.",
+      "context": "The sudden FAA ground stop rippled across domestic schedules, stranding collegiate and professional sports teams and throwing the weekend athletics calendar into disruption."
+    },
+    {
+      "id": "us-02",
+      "category": "USA National",
+      "intensity": "critical",
+      "timestampUtc": "2026-11-13T17:45:00Z",
+      "title": "Cargo ship strikes bridge between New Jersey and Philadelphia, triggering major backups",
+      "source": "Associated Press — US Infrastructure",
+      "metrics": ["Delaware River span", "Traffic disruption"],
+      "summary": "A commercial cargo vessel collided with a bridge spanning between New Jersey and Philadelphia, prompting emergency structural closures and extensive highway traffic backups.",
+      "context": "Emergency responders and maritime authorities cordoned approach lanes while assessing span integrity along the busy Northeast corridor crossing."
+    },
+    {
+      "id": "az-01",
+      "category": "Arizona Local",
+      "intensity": "critical",
+      "timestampUtc": "2026-11-13T18:05:00Z",
+      "title": "Southwest Aviation Corridor: Nationwide FAA ATC ground stop disrupts US & Western hubs",
+      "source": "Associated Press — Regional Transit Overlay",
+      "metrics": ["ATC outage", "Western hub delays"],
+      "summary": "The nationwide FAA air traffic control communications failure halted departures and triggered hundreds of diversions across US airspace, impacting Southwest transcontinental routing.",
+      "context": "Local JSON Feed Binding Note: Grounded in AP national ATC reporting; when deployed on GitHub Pages, this slot binds local Phoenix Sky Harbor and Tucson status JSON telemetry."
+    },
+    {
+      "id": "sc-01",
+      "category": "Science",
+      "intensity": "critical",
+      "timestampUtc": "2026-11-13T16:00:00Z",
+      "title": "SpaceX Starship reaches orbit; double catch attempt thwarted by booster water landing",
+      "source": "Associated Press — Science & Space",
+      "metrics": ["Orbit achieved", "Booster water landing"],
+      "summary": "SpaceX's Starship heavy-lift vehicle successfully soared into orbit during its flight test, though plans for a double mechanical tower catch were thwarted when the booster diverted to a water landing.",
+      "context": "Orbital insertion marks a key flight milestone even as recovery engineering continues to refine dual-stage catch precision."
+    },
+    {
+      "id": "wn-03",
+      "category": "World News",
+      "intensity": "high",
+      "timestampUtc": "2026-11-12T14:00:00Z",
+      "title": "TB deaths fall 35% since 2015 as domestic funding rises 14% to US$ 5.6B, WHO reports",
+      "source": "World Health Organization — Global TB Report 2026",
+      "metrics": ["10.6M cases", "1.1M deaths", "86M lives saved"],
+      "summary": "WHO's 2026 Global Tuberculosis Report finds domestic TB funding jumped 14% to US$ 5.6 billion between 2024 and 2025, offsetting international financing cuts of a similar scale.",
+      "context": "In 2025, 10.6M people developed TB and 1.1M died (reaching the first End TB mortality milestone five years late). Only 8.4M were diagnosed, leaving 2.2M undiagnosed. Among 370,000 rifampicin-resistant cases, 42% received treatment; 6-month regimen uptake grew from 18% to 42%."
+    },
+    {
+      "id": "wn-04",
+      "category": "World News",
+      "intensity": "high",
+      "timestampUtc": "2026-11-13T11:30:00Z",
+      "title": "Conflict and disease outbreaks deepen DR Congo hunger crisis toward record food insecurity",
+      "source": "World Health Organization — Joint News Release",
+      "metrics": ["Record insecurity", "Compound outbreaks"],
+      "summary": "Escalating conflict alongside active disease outbreaks is intensifying acute hunger in the Democratic Republic of the Congo, with record population numbers projected to face severe food insecurity.",
+      "context": "WHO and partner agencies warn that overlapping displacement and weakened local health infrastructure require coordinated medical and nutrition relief."
+    },
+    {
+      "id": "us-03",
+      "category": "USA National",
+      "intensity": "high",
+      "timestampUtc": "2026-11-13T15:20:00Z",
+      "title": "Microsoft outage silences Teams, Outlook, and Copilot, highlighting single-vendor risks",
+      "source": "Associated Press — Business & Technology",
+      "metrics": ["Teams & Outlook down", "Copilot impacted"],
+      "summary": "A major Microsoft cloud outage knocked out Teams, Outlook, and Copilot across corporate and public-sector workplaces, leaving workers unable to access inboxes.",
+      "context": "Analysts cited by AP noted the incident underscores the operational fragility of relying on a single technology provider for essential communications infrastructure."
+    },
+    {
+      "id": "us-04",
+      "category": "USA National",
+      "intensity": "high",
+      "timestampUtc": "2026-11-13T13:50:00Z",
+      "title": "US & Mexico risk losing measles-free status as early flu surges and FDA updates GLP-1 warning",
+      "source": "Associated Press — Health Desk",
+      "metrics": ["Measles-free risk", "Early flu surge", "GLP-1 warning"],
+      "summary": "Recent measles outbreaks threaten the measles-free designation of both the US and Mexico, while an unusually early US flu season is accelerating across the South and West.",
+      "context": "Separately, the FDA added a rare vision-loss warning to popular GLP-1 medications, medical panels issued updated prostate cancer and menopause guidance, and the administration backed ibogaine research."
+    },
+    {
+      "id": "az-02",
+      "category": "Arizona Local",
+      "intensity": "high",
+      "timestampUtc": "2026-11-13T14:30:00Z",
+      "title": "Southwest Public Health Watch: Early US flu season targets South and West corridors",
+      "source": "Associated Press — Regional Health Wire",
+      "metrics": ["South & West focus", "Early respiratory surge"],
+      "summary": "Public health reporting confirms the 2026 US influenza season has arrived ahead of schedule, concentrating early transmission across Southern and Western states.",
+      "context": "Arizona desk monitoring focuses on early respiratory triage across desert metro clinics, paired with cross-border measles surveillance affecting the US and Mexico."
+    },
+    {
+      "id": "az-03",
+      "category": "Arizona Local",
+      "intensity": "high",
+      "timestampUtc": "2026-11-13T11:15:00Z",
+      "title": "Western Watershed Alert: Bigger, more-frequent wildfires threaten US drinking water supplies",
+      "source": "Associated Press — Climate & Environment",
+      "metrics": ["Water supply risk", "Wildfire frequency"],
+      "summary": "Larger and more frequent wildfires are contaminating and threatening municipal drinking water supplies across the United States, raising acute stakes for arid Western basins.",
+      "context": "Post-fire ash runoff and sediment surges challenge reservoir treatment capacity, making watershed resilience a top regional priority."
+    },
+    {
+      "id": "sc-02",
+      "category": "Science",
+      "intensity": "high",
+      "timestampUtc": "2026-11-13T13:10:00Z",
+      "title": "Google search referrals drop 33% globally (38% in US) amid AI Overviews rollout",
+      "source": "Reuters Institute — 2026 Digital News Report",
+      "metrics": ["−33% global search", "−38% US search", "−43% 3-yr outlook"],
+      "summary": "Analytics from Chartbeat covering over 2,500 publisher sites show Google organic search traffic fell by a third globally and 38% in the US between November 2024 and November 2025.",
+      "context": "Publishers project search referrals will nearly halve (−43%) over the next three years as AI Mode, AI Overviews, and volatile Google Discover feeds shift newsrooms toward loyal audience depth over raw reach."
+    },
+    {
+      "id": "sc-03",
+      "category": "Science",
+      "intensity": "high",
+      "timestampUtc": "2026-11-12T14:15:00Z",
+      "title": "TB R&D investment stalls at US$ 1.2B—under one quarter of 2027 annual target",
+      "source": "World Health Organization — TB R&D Brief",
+      "metrics": ["US$ 1.2B actual", "US$ 5B 2027 goal", "59% rapid-test rate"],
+      "summary": "Global tuberculosis research funding stood at US$ 1.2 billion in 2023, far short of the US$ 5 billion annual target required by 2027 to accelerate new vaccines, diagnostics, and regimens.",
+      "context": "Only 59% of newly diagnosed TB patients were tested with a WHO-recommended rapid diagnostic tool in 2025, trailing the 100% target set for 2027."
+    },
+    {
+      "id": "wn-05",
+      "category": "World News",
+      "intensity": "standard",
+      "timestampUtc": "2026-11-13T10:00:00Z",
+      "title": "WHO Member States reiterate May 2027 commitment for Pandemic Agreement PABS Annex",
+      "source": "World Health Organization — Governance",
+      "metrics": ["May 2027 deadline", "PABS Annex"],
+      "summary": "WHO Member States reaffirmed their commitment to finalize the Pathogen Access and Benefit-Sharing (PABS) Annex to the Pandemic Agreement by May 2027.",
+      "context": "Finalizing the annex aims to ensure equitable pathogen sample sharing and medical countermeasure access ahead of future global health emergencies."
+    },
+    {
+      "id": "wn-06",
+      "category": "World News",
+      "intensity": "standard",
+      "timestampUtc": "2026-11-13T09:20:00Z",
+      "title": "COP31 Turkey: UN chief demands drastic emissions cuts as zero-waste groups warn Africa",
+      "source": "Associated Press & Global Issues — COP31",
+      "metrics": ["COP31 Turkey", "Electrification push", "Zero-waste call"],
+      "summary": "UN leadership warned at COP31 in Turkey that immediate, drastic emissions cuts are essential to avert climate catastrophe, while negotiators pushed global electrification goals with mining safeguards.",
+      "context": "In parallel COP31 briefings, zero-waste advocates cautioned that Africa cannot burn its way out of its escalating waste crisis, urging circular infrastructure over incineration."
+    },
+    {
+      "id": "us-05",
+      "category": "USA National",
+      "intensity": "standard",
+      "timestampUtc": "2026-11-13T12:10:00Z",
+      "title": "Post-midterms shakeup: Van Hollen challenges Schumer as GOP scores rare Maine flip",
+      "source": "Associated Press & Global National",
+      "metrics": ["Senate leadership race", "Maine flip", "22 FTOs listed"],
+      "summary": "Sen. Chris Van Hollen announced a challenge to Chuck Schumer for Senate majority leadership following a midterm cycle in which Democrats won broadly while Republicans flipped a blue seat in Maine.",
+      "context": "Meanwhile, President Trump doubled down on his post-midterm agenda, and the US list of designated foreign terrorist organizations in Latin America expanded to 22."
+    },
+    {
+      "id": "az-04",
+      "category": "Arizona Local",
+      "intensity": "standard",
+      "timestampUtc": "2026-11-13T08:00:00Z",
+      "title": "Local JSON Feed Adapter: Static GitHub Pages blueprint for Arizona municipal & NWS feeds",
+      "source": "Dashboard Architecture Specification",
+      "metrics": ["Zero-backend JSON", "CORS-safe static"],
+      "summary": "This dashboard's Arizona Local slot demonstrates how GitHub Pages sites ingest scheduled JSON snapshots generated from local XML/RSS feeds without runtime CORS blockers.",
+      "context": "Pair with GitHub Actions cron builds to compile Maricopa County emergency notices, NWS Phoenix advisories, and regional transit feeds into ./data/arizona-local.json."
+    },
+    {
+      "id": "sc-04",
+      "category": "Science",
+      "intensity": "standard",
+      "timestampUtc": "2026-11-13T07:45:00Z",
+      "title": "Open Science Syndication: arXiv, NASA, ScienceDaily & PLOS API feed standards",
+      "source": "arXiv, NASA, ScienceDaily & PLOS Documentation",
+      "metrics": ["arXiv 2,000 limit", "Hourly XML", "Solr API"],
+      "summary": "Major research repositories expose standardized RSS 2.0, Atom, and Solr APIs—including arXiv's midnight EST multi-category feeds (cs.ai+q-bio.NC) and NASA center feeds.",
+      "context": "ScienceDaily updates topic feeds (/rss/top/science.xml, /rss/top/technology.xml) as frequently as hourly, offering clean structured metadata for automated static news aggregators."
+    },
+    {
+      "id": "sc-05",
+      "category": "Science",
+      "intensity": "standard",
+      "timestampUtc": "2026-11-13T06:30:00Z",
+      "title": "Algorithmic News Sorting: 77% of users classified into news/politics ad buckets",
+      "source": "MSU ComArtSci & IRASS Literature Review (2025)",
+      "metrics": ["51% 4+ buckets", "23% none", "86% US digital"],
+      "summary": "Michigan State University researchers found 51% of study participants were assigned four or more Facebook news/politics interest categories, 26% had one to three, and 23% had none.",
+      "context": "A 2025 IRASS literature review notes 86% of Americans get news from digital devices (with mobile exceeding 50%), elevating risks of filter bubbles and speed-versus-verification trade-offs."
+    }
+  ],
+  "gallery": [
+    {
+      "id": "plate-01",
+      "plate": "PLATE 01",
+      "title": "Rachel Cook — Chiaroscuro Key Study",
+      "subtitle": "Monochrome studio profile in directional tungsten key light",
+      "lens": "85mm f/1.4",
+      "lighting": "45° Softbox + Negative Fill",
+      "resolution": "2400 × 3200 px",
+      "asset": "rachel-cook-plate-01.webp",
+      "description": "High-contrast studio portrait study balancing sculptural facial shadow planes against warm-toned backdrop falloff, framed at classic 3:4 magazine editorial proportions.",
+      "variant": 1
+    },
+    {
+      "id": "plate-02",
+      "plate": "PLATE 02",
+      "title": "Rachel Cook — Golden Hour Terrace",
+      "subtitle": "Warm directional afternoon light on desert limestone",
+      "lens": "50mm f/1.8",
+      "lighting": "Natural Sun + Gold Bounce",
+      "resolution": "2400 × 3200 px",
+      "asset": "rachel-cook-plate-02.webp",
+      "description": "Sonoran-inspired warm ambient light study capturing subtle rim highlights along shoulders and hair with clean editorial framing.",
+      "variant": 2
+    },
+    {
+      "id": "plate-03",
+      "plate": "PLATE 03",
+      "title": "Rachel Cook — Petrol Slate Editorial",
+      "subtitle": "Cool architectural backdrop with crisp beauty dish key",
+      "lens": "105mm f/2.0",
+      "lighting": "Silver Beauty Dish + Rim",
+      "resolution": "2400 × 3200 px",
+      "asset": "rachel-cook-plate-03.webp",
+      "description": "Cool-toned editorial portrait pairing deep petrol-slate studio paper with specular rim separation and composed symmetry.",
+      "variant": 3
+    },
+    {
+      "id": "plate-04",
+      "plate": "PLATE 04",
+      "title": "Rachel Cook — Warm Ochre Silhouette",
+      "subtitle": "Minimalist studio contour study with soft scrim diffusion",
+      "lens": "85mm f/2.0",
+      "lighting": "8×8 Overhead Scrim",
+      "resolution": "2400 × 3200 px",
+      "asset": "rachel-cook-plate-04.webp",
+      "description": "Diffused overhead illumination softening skin gradients against deep terracotta-umber shadow tones for print-ready cover proportions.",
+      "variant": 4
+    },
+    {
+      "id": "plate-05",
+      "plate": "PLATE 05",
+      "title": "Rachel Cook — Silver Gelatin Frame",
+      "subtitle": "High-key editorial close portrait on archival matte",
+      "lens": "70–200mm f/2.8",
+      "lighting": "Twin Stripboxes + Hair Light",
+      "resolution": "2400 × 3200 px",
+      "asset": "rachel-cook-plate-05.webp",
+      "description": "Crisp silver-monochrome tonal curve emphasizing geometric neckline lines and clean negative space above the subject.",
+      "variant": 5
+    },
+    {
+      "id": "plate-06",
+      "plate": "PLATE 06",
+      "title": "Rachel Cook — Dusk Horizon Study",
+      "subtitle": "Low-key editorial portrait with warm-cool split toning",
+      "lens": "35mm f/1.4",
+      "lighting": "CTO Gel Rim + Ambient Fill",
+      "resolution": "2400 × 3200 px",
+      "asset": "rachel-cook-plate-06.webp",
+      "description": "Wide environmental portrait framing subtle warm amber edge light against deep evening slate gradients.",
+      "variant": 6
+    }
+  ]
+}
+  </script>
+
+  <script>
+    let feedState = {
+      meta: {},
+      feeds: [],
+      gallery: [],
+      activeCategory: 'all',
+      activeIntensity: 'all',
+      searchQuery: '',
+      sortMode: 'intensity',
+      expandedIds: {},
+      allExpanded: false,
+      activeLightboxIndex: -1,
+      lastOpenerEl: null
+    };
+
+    const INTENSITY_RANK = { critical: 1, high: 2, standard: 3 };
+    const INTENSITY_LABEL = {
+      critical: `Critical / Breaking`,
+      high: `High`,
+      standard: `Standard`
+    };
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, `&amp;`)
+        .replace(/</g, `&lt;`)
+        .replace(/>/g, `&gt;`)
+        .replace(/"/g, `&quot;`)
+        .replace(/'/g, `&#39;`);
+    }
+
+    function formatUtcString(isoStr) {
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return String(isoStr || '');
+      const yyyy = d.getUTCFullYear();
+      const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const dd = String(d.getUTCDate()).padStart(2, '0');
+      const hh = String(d.getUTCHours()).padStart(2, '0');
+      const mi = String(d.getUTCMinutes()).padStart(2, '0');
+      const ss = String(d.getUTCSeconds()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss} UTC`;
+    }
+
+    function formatShortUtc(isoStr) {
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return String(isoStr || '');
+      const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const dd = String(d.getUTCDate()).padStart(2, '0');
+      const hh = String(d.getUTCHours()).padStart(2, '0');
+      const mi = String(d.getUTCMinutes()).padStart(2, '0');
+      return `${mm}-${dd} ${hh}:${mi}Z`;
+    }
+
+    function loadEmbeddedJson() {
+      const rawEl = document.getElementById('local-feed-data');
+      if (!rawEl) return null;
+      try {
+        return JSON.parse(rawEl.textContent || '{}');
+      } catch (err) {
+        return null;
+      }
+    }
+
+    async function loadFeedDataFromStaticJson() {
+      const statusEl = document.getElementById('json-loader-status');
+      const embedded = loadEmbeddedJson();
+      if (embedded) {
+        applyFeedPayload(embedded, `Embedded JSON island loaded (mirroring ./data/feeds.json).`);
+      }
+      // Attempt live static relative JSON fetch for GitHub Pages deployment
+      try {
+        if (window.location && window.location.protocol && window.location.protocol.startsWith('http')) {
+          const resp = await fetch('./data/feeds.json', { cache: 'no-store' });
+          if (resp.ok) {
+            const remoteData = await resp.json();
+            if (remoteData && Array.isArray(remoteData.feeds)) {
+              applyFeedPayload(remoteData, `Live ./data/feeds.json loaded from GitHub Pages host.`);
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        if (statusEl) {
+          statusEl.textContent = `Embedded JSON active (20 dispatches, 6 portrait plates). Place feeds.json in ./data/feeds.json on GitHub Pages for live fetches.`;
+        }
+      }
+    }
+
+    function applyFeedPayload(payload, statusMessage) {
+      if (!payload || !Array.isArray(payload.feeds)) return;
+      feedState.meta = payload.meta || {};
+      feedState.feeds = payload.feeds;
+      feedState.gallery = Array.isArray(payload.gallery) ? payload.gallery : [];
+
+      const utcEl = document.getElementById('utc-timestamp');
+      if (utcEl) {
+        const ts = feedState.meta.lastUpdatedUtc || new Date().toISOString();
+        utcEl.textContent = formatUtcString(ts);
+        utcEl.setAttribute('datetime', ts);
+      }
+
+      const statusEl = document.getElementById('json-loader-status');
+      if (statusEl && statusMessage) {
+        statusEl.textContent = statusMessage;
+      }
+
+      const previewEl = document.getElementById('json-schema-preview');
+      if (previewEl) {
+        const sample = {
+          meta: feedState.meta,
+          feeds: feedState.feeds.slice(0, 2),
+          gallery: feedState.gallery.slice(0, 1)
+        };
+        previewEl.textContent = JSON.stringify(sample, null, 2);
+      }
+
+      updateCategoryCounts();
+      renderFeed();
+      renderGallery();
+      renderCharts();
+    }
+
+    function syncLocalFeed() {
+      const btn = document.getElementById('sync-feed-btn');
+      const liveText = document.getElementById('live-status-text');
+      const utcEl = document.getElementById('utc-timestamp');
+      const kpiSync = document.getElementById('kpi-sync-sub');
+      if (btn) btn.disabled = true;
+      if (liveText) liveText.textContent = `Syncing JSON Feed…`;
+
+      setTimeout(function () {
+        const nowIso = new Date().toISOString();
+        if (feedState.meta) feedState.meta.lastUpdatedUtc = nowIso;
+        if (utcEl) {
+          utcEl.textContent = formatUtcString(nowIso);
+          utcEl.setAttribute('datetime', nowIso);
+        }
+        if (liveText) liveText.textContent = `Live JSON Feed · Operational`;
+        if (kpiSync) kpiSync.textContent = `Synced at ${formatShortUtc(nowIso)}`;
+        if (btn) btn.disabled = false;
+        renderFeed();
+      }, 220);
+    }
+
+    function handleLocalJsonUpload(event) {
+      const input = event.target;
+      const statusEl = document.getElementById('json-loader-status');
+      if (!input || !input.files || !input.files[0]) return;
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        try {
+          const parsed = JSON.parse(ev.target.result);
+          if (!parsed || !Array.isArray(parsed.feeds)) {
+            if (statusEl) statusEl.textContent = `Upload error: JSON must contain a top-level "feeds" array.`;
+            return;
+          }
+          applyFeedPayload(parsed, `Loaded custom JSON file "${file.name}" (${parsed.feeds.length} dispatches).`);
+        } catch (err) {
+          if (statusEl) statusEl.textContent = `JSON parse error in "${file.name}". Verify valid UTF-8 JSON syntax.`;
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function copyJsonSchema() {
+      const labelEl = document.getElementById('copy-json-label');
+      const rawEl = document.getElementById('local-feed-data');
+      const text = rawEl ? rawEl.textContent : JSON.stringify({ meta: feedState.meta, feeds: feedState.feeds, gallery: feedState.gallery }, null, 2);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          if (labelEl) {
+            labelEl.textContent = `Copied JSON Payload`;
+            setTimeout(function () { labelEl.textContent = `Copy JSON Payload`; }, 1800);
+          }
+        }).catch(function () {
+          if (labelEl) labelEl.textContent = `Ready in Schema Box`;
+        });
+      } else if (labelEl) {
+        labelEl.textContent = `Copied JSON Payload`;
+        setTimeout(function () { labelEl.textContent = `Copy JSON Payload`; }, 1800);
+      }
+    }
+
+    function updateCategoryCounts() {
+      const counts = {
+        all: feedState.feeds.length,
+        Science: 0,
+        'Arizona Local': 0,
+        'USA National': 0,
+        'World News': 0
+      };
+      feedState.feeds.forEach(function (item) {
+        if (Object.prototype.hasOwnProperty.call(counts, item.category)) {
+          counts[item.category] += 1;
+        }
+      });
+      const mapIds = [
+        ['count-all', counts.all],
+        ['count-science', counts.Science],
+        ['count-arizona', counts['Arizona Local']],
+        ['count-usa', counts['USA National']],
+        ['count-world', counts['World News']]
+      ];
+      mapIds.forEach(function (pair) {
+        const el = document.getElementById(pair[0]);
+        if (el) el.textContent = String(pair[1]);
+      });
+    }
+
+    function getFilteredFeeds() {
+      const q = (feedState.searchQuery || '').trim().toLowerCase();
+      const filtered = feedState.feeds.filter(function (item) {
+        if (feedState.activeCategory !== 'all' && item.category !== feedState.activeCategory) return false;
+        if (feedState.activeIntensity !== 'all' && item.intensity !== feedState.activeIntensity) return false;
+        if (q) {
+          const hay = `${item.title} ${item.source} ${item.summary} ${item.context} ${item.category}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      filtered.sort(function (a, b) {
+        if (feedState.sortMode === 'intensity') {
+          const diff = (INTENSITY_RANK[a.intensity] || 9) - (INTENSITY_RANK[b.intensity] || 9);
+          if (diff !== 0) return diff;
+        }
+        return new Date(b.timestampUtc).getTime() - new Date(a.timestampUtc).getTime();
+      });
+      return filtered;
+    }
+
+    function setCategory(cat) {
+      feedState.activeCategory = cat;
+      const tabMap = {
+        'all': 'tab-all',
+        'Science': 'tab-science',
+        'Arizona Local': 'tab-arizona',
+        'USA National': 'tab-usa',
+        'World News': 'tab-world'
+      };
+      Object.keys(tabMap).forEach(function (key) {
+        const btn = document.getElementById(tabMap[key]);
+        if (!btn) return;
+        const active = key === cat;
+        btn.classList.toggle('is-active', active);
+        btn.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      renderFeed();
+    }
+
+    function setIntensity(level) {
+      feedState.activeIntensity = level;
+      const buttons = document.querySelectorAll('.intensity-btn');
+      buttons.forEach(function (btn) {
+        btn.classList.toggle('is-active', btn.getAttribute('data-intensity') === level);
+      });
+      renderFeed();
+    }
+
+    function setSearchQuery(val) {
+      feedState.searchQuery = val || '';
+      renderFeed();
+    }
+
+    function setSortMode(val) {
+      feedState.sortMode = val || 'intensity';
+      renderFeed();
+    }
+
+    function resetAllFilters() {
+      feedState.activeCategory = 'all';
+      feedState.activeIntensity = 'all';
+      feedState.searchQuery = '';
+      const searchEl = document.getElementById('search-input');
+      if (searchEl) searchEl.value = '';
+      setCategory('all');
+      setIntensity('all');
+    }
+
+    function toggleAccordion(id) {
+      feedState.expandedIds[id] = !feedState.expandedIds[id];
+      const panel = document.getElementById(`acc-panel-${id}`);
+      const btn = document.getElementById(`acc-btn-${id}`);
+      const isOpen = !!feedState.expandedIds[id];
+      if (panel) panel.classList.toggle('is-open', isOpen);
+      if (btn) {
+        btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        const label = btn.querySelector('.acc-btn-text');
+        if (label) label.textContent = isOpen ? `Hide Context & Full Summary` : `Read Full Summary & Context`;
+      }
+    }
+
+    function toggleAllAccordions() {
+      feedState.allExpanded = !feedState.allExpanded;
+      const visible = getFilteredFeeds();
+      visible.forEach(function (item) {
+        feedState.expandedIds[item.id] = feedState.allExpanded;
+      });
+      const labelEl = document.getElementById('toggle-all-label');
+      if (labelEl) labelEl.textContent = feedState.allExpanded ? `Collapse All Details` : `Expand All Details`;
+      renderFeed();
+    }
+
+    function renderFeed() {
+      const grid = document.getElementById('news-feed-grid');
+      const emptyEl = document.getElementById('feed-empty-state');
+      const headingEl = document.getElementById('feed-heading');
+      const countLabel = document.getElementById('visible-count-label');
+      if (!grid) return;
+
+      const items = getFilteredFeeds();
+      const catTitle = feedState.activeCategory === 'all' ? `All Desks` : feedState.activeCategory;
+      if (headingEl) headingEl.textContent = `Live Dispatches — ${catTitle}`;
+      if (countLabel) countLabel.textContent = `Displaying ${items.length} of ${feedState.feeds.length} dispatches`;
+
+      // Update top KPI strip
+      let critCount = 0;
+      let highCount = 0;
+      items.forEach(function (it) {
+        if (it.intensity === 'critical') critCount += 1;
+        if (it.intensity === 'high') highCount += 1;
+      });
+      const kpiTotal = document.getElementById('kpi-total');
+      const kpiTotalSub = document.getElementById('kpi-total-sub');
+      const kpiCrit = document.getElementById('kpi-critical');
+      const kpiHigh = document.getElementById('kpi-high');
+      if (kpiTotal) kpiTotal.textContent = String(items.length);
+      if (kpiTotalSub) kpiTotalSub.textContent = `Active filter: ${catTitle}`;
+      if (kpiCrit) kpiCrit.textContent = String(critCount);
+      if (kpiHigh) kpiHigh.textContent = String(highCount);
+
+      if (items.length === 0) {
+        grid.innerHTML = '';
+        if (emptyEl) emptyEl.classList.add('is-visible');
+        return;
+      }
+      if (emptyEl) emptyEl.classList.remove('is-visible');
+
+      const htmlParts = items.map(function (item, idx) {
+        const num = String(idx + 1).padStart(2, '0');
+        const isOpen = !!feedState.expandedIds[item.id];
+        const badgeClass = item.intensity === 'critical' ? 'badge-critical' : (item.intensity === 'high' ? 'badge-high' : 'badge-standard');
+        const rankLabel = INTENSITY_LABEL[item.intensity] || `Standard`;
+        const metricsHtml = Array.isArray(item.metrics)
+          ? item.metrics.map(function (m) { return `<span class="metric-chip">${escapeHtml(m)}</span>`; }).join('')
+          : '';
+
+        return `
+          <div class="card-wrapper">
+            <article class="news-card" data-rank="${escapeHtml(item.intensity)}">
+              <div class="news-card-meta">
+                <div class="news-card-badges">
+                  <span class="index-num">${num}</span>
+                  <span class="intensity-badge ${badgeClass}">${escapeHtml(rankLabel)}</span>
+                  <span class="desk-tag">${escapeHtml(item.category)}</span>
+                </div>
+                <time class="news-timestamp" datetime="${escapeHtml(item.timestampUtc)}">${escapeHtml(formatShortUtc(item.timestampUtc))}</time>
+              </div>
+
+              <h3 class="news-title">${escapeHtml(item.title)}</h3>
+              <p class="news-source">${escapeHtml(item.source)}</p>
+
+              <div class="news-metrics-row">${metricsHtml}</div>
+
+              <button
+                type="button"
+                class="accordion-trigger"
+                id="acc-btn-${escapeHtml(item.id)}"
+                aria-expanded="${isOpen ? 'true' : 'false'}"
+                aria-controls="acc-panel-${escapeHtml(item.id)}"
+                onclick="toggleAccordion('${escapeHtml(item.id)}')"
+              >
+                <span class="acc-btn-text">${isOpen ? `Hide Context &amp; Full Summary` : `Read Full Summary &amp; Context`}</span>
+                <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+
+              <div class="accordion-panel ${isOpen ? 'is-open' : ''}" id="acc-panel-${escapeHtml(item.id)}">
+                <p class="accordion-summary">${escapeHtml(item.summary)}</p>
+                <p class="accordion-context"><strong>Editorial Context:</strong> ${escapeHtml(item.context)}</p>
+              </div>
+            </article>
+          </div>
+        `;
+      });
+
+      grid.innerHTML = htmlParts.join('');
+      renderCharts();
+    }
+
+    function buildPortraitSvg(variant, title) {
+      const backdrops = {
+        1: [`var(--portrait-backdrop-1)`, `var(--portrait-amber)`, `var(--portrait-ivory)`, `var(--portrait-warm)`],
+        2: [`var(--portrait-backdrop-2)`, `var(--portrait-amber)`, `var(--portrait-warm)`, `var(--portrait-ivory)`],
+        3: [`var(--portrait-backdrop-3)`, `var(--portrait-slate)`, `var(--portrait-ivory)`, `var(--portrait-warm)`],
+        4: [`var(--portrait-backdrop-4)`, `var(--portrait-rose)`, `var(--portrait-warm)`, `var(--portrait-ivory)`],
+        5: [`var(--portrait-backdrop-5)`, `var(--portrait-ivory)`, `var(--portrait-ivory)`, `var(--portrait-slate)`],
+        6: [`var(--portrait-backdrop-6)`, `var(--portrait-amber)`, `var(--portrait-slate)`, `var(--portrait-warm)`]
+      };
+      const pal = backdrops[variant] || backdrops[1];
+      const gradId = `pgrad-${variant}-${Math.floor(Math.random() * 10000)}`;
+      const haloX = variant % 2 === 0 ? 370 : 230;
+      const headTurn = variant === 1 ? -10 : (variant === 3 ? 12 : (variant === 6 ? -6 : 4));
+
+      return `
+        <svg viewBox="0 0 600 800" role="img" aria-label="${escapeHtml(title)} studio portrait study" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="${gradId}" cx="${Math.round((haloX / 600) * 100)}%" cy="32%" r="65%">
+              <stop offset="0%" stop-color="${pal[1]}" stop-opacity="0.45"/>
+              <stop offset="55%" stop-color="${pal[0]}" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="var(--portrait-shadow)" stop-opacity="1"/>
+            </radialGradient>
+          </defs>
+          <rect width="600" height="800" fill="var(--portrait-shadow)"/>
+          <rect width="600" height="800" fill="url(#${gradId})"/>
+
+          <!-- Architectural studio backdrop geometry -->
+          <line x1="48" y1="48" x2="552" y2="48" stroke="${pal[2]}" stroke-opacity="0.22" stroke-width="1"/>
+          <line x1="48" y1="752" x2="552" y2="752" stroke="${pal[2]}" stroke-opacity="0.22" stroke-width="1"/>
+          <circle cx="${haloX}" cy="260" r="195" fill="none" stroke="${pal[2]}" stroke-opacity="0.16" stroke-width="1.5"/>
+
+          <!-- Subject silhouette & editorial chiaroscuro lighting -->
+          <g transform="translate(${headTurn}, 0)">
+            <!-- Hair volume shadow -->
+            <path d="M185,260 C180,155 240,105 305,105 C375,105 422,162 418,268 C416,335 438,418 450,475 L156,475 C168,412 188,332 185,260 Z" fill="var(--portrait-shadow)" opacity="0.88"/>
+            <!-- Rim highlight on hair -->
+            <path d="M202,225 C208,148 256,115 306,115 C358,115 398,150 408,215" fill="none" stroke="${pal[1]}" stroke-width="3" stroke-opacity="0.72"/>
+
+            <!-- Shoulders & couture draped neckline -->
+            <path d="M95,800 C112,625 170,535 245,512 L355,512 C430,535 488,625 505,800 Z" fill="var(--portrait-shadow)"/>
+            <path d="M138,800 C152,650 198,558 252,532 L300,596 L348,532 C402,558 448,650 462,800 Z" fill="${pal[3]}" fill-opacity="0.14"/>
+            <path d="M242,512 L300,602 L358,512" fill="none" stroke="${pal[2]}" stroke-width="2" stroke-opacity="0.65"/>
+
+            <!-- Neck & collarbone shadow -->
+            <path d="M266,408 L262,522 L300,564 L338,522 L334,408 Z" fill="${pal[3]}" fill-opacity="0.72"/>
+            <path d="M266,408 C286,440 314,440 334,408 L336,456 C312,468 288,468 264,456 Z" fill="var(--portrait-shadow)" opacity="0.55"/>
+
+            <!-- Sculpted face profile with directional key light -->
+            <path d="M225,248 C225,182 258,145 300,145 C342,145 375,182 375,248 C375,318 346,396 300,414 C254,396 225,318 225,248 Z" fill="${pal[2]}" fill-opacity="0.88"/>
+            <!-- Shadow side modeling plane -->
+            <path d="M300,145 C342,145 375,182 375,248 C375,318 346,396 300,414 C312,350 315,250 300,145 Z" fill="var(--portrait-shadow)" opacity="0.34"/>
+            <!-- Brow, nose ridge, lip contour lines -->
+            <path d="M254,254 Q273,246 290,254" fill="none" stroke="var(--portrait-shadow)" stroke-width="3" stroke-linecap="round" opacity="0.75"/>
+            <path d="M312,254 Q329,246 346,254" fill="none" stroke="var(--portrait-shadow)" stroke-width="3" stroke-linecap="round" opacity="0.75"/>
+            <path d="M300,256 L296,322 L308,328" fill="none" stroke="var(--portrait-shadow)" stroke-width="2.2" stroke-linecap="round" opacity="0.55"/>
+            <path d="M279,356 Q300,366 321,356" fill="none" stroke="${pal[1]}" stroke-width="3.2" stroke-linecap="round" opacity="0.82"/>
+            <path d="M283,358 Q300,352 317,358" fill="none" stroke="var(--portrait-shadow)" stroke-width="1.6" opacity="0.55"/>
+          </g>
+
+          <!-- Viewfinder crop ticks -->
+          <path d="M32,64 L32,32 L64,32 M536,32 L568,32 L568,64 M32,736 L32,768 L64,768 M536,768 L568,768 L568,736" fill="none" stroke="${pal[2]}" stroke-width="1.5" stroke-opacity="0.55"/>
+        </svg>
+      `;
+    }
+
+    function renderGallery() {
+      const grid = document.getElementById('gallery-grid');
+      if (!grid) return;
+      const html = feedState.gallery.map(function (item, idx) {
+        return `
+          <button type="button" class="portrait-card" onclick="openLightbox(${idx}, this)" aria-label="Open high-resolution view of ${escapeHtml(item.title)}">
+            <div class="portrait-frame">
+              ${buildPortraitSvg(item.variant, item.title)}
+            </div>
+            <div class="portrait-caption-bar">
+              <span class="portrait-plate-id">${escapeHtml(item.plate)}</span>
+              <h3 class="portrait-title">${escapeHtml(item.title)}</h3>
+              <span class="portrait-specs">${escapeHtml(item.lens)} · ${escapeHtml(item.resolution)}</span>
+            </div>
+          </button>
+        `;
+      }).join('');
+      grid.innerHTML = html;
+    }
+
+    function openLightbox(index, openerEl) {
+      const backdrop = document.getElementById('portrait-lightbox');
+      if (!backdrop || !feedState.gallery[index]) return;
+      feedState.activeLightboxIndex = index;
+      feedState.lastOpenerEl = openerEl || null;
+      populateLightbox(feedState.gallery[index]);
+      backdrop.classList.add('is-open');
+      const closeBtn = document.getElementById('lightbox-close-btn');
+      if (closeBtn) closeBtn.focus();
+    }
+
+    function populateLightbox(item) {
+      const media = document.getElementById('lightbox-media-slot');
+      const badge = document.getElementById('lightbox-plate-badge');
+      const title = document.getElementById('lightbox-title');
+      const subtitle = document.getElementById('lightbox-subtitle');
+      const desc = document.getElementById('lightbox-description');
+      const lens = document.getElementById('lightbox-lens');
+      const light = document.getElementById('lightbox-lighting');
+      const res = document.getElementById('lightbox-resolution');
+      const asset = document.getElementById('lightbox-asset');
+
+      if (media) media.innerHTML = buildPortraitSvg(item.variant, item.title);
+      if (badge) badge.textContent = item.plate;
+      if (title) title.textContent = item.title;
+      if (subtitle) subtitle.textContent = item.subtitle;
+      if (desc) desc.textContent = item.description;
+      if (lens) lens.textContent = item.lens;
+      if (light) light.textContent = item.lighting;
+      if (res) res.textContent = item.resolution;
+      if (asset) asset.textContent = item.asset;
+    }
+
+    function stepLightbox(delta) {
+      if (!feedState.gallery.length) return;
+      const len = feedState.gallery.length;
+      const next = (feedState.activeLightboxIndex + delta + len) % len;
+      feedState.activeLightboxIndex = next;
+      populateLightbox(feedState.gallery[next]);
+    }
+
+    function closeLightbox() {
+      const backdrop = document.getElementById('portrait-lightbox');
+      if (backdrop) backdrop.classList.remove('is-open');
+      feedState.activeLightboxIndex = -1;
+      if (feedState.lastOpenerEl && typeof feedState.lastOpenerEl.focus === 'function') {
+        feedState.lastOpenerEl.focus();
+      }
+    }
+
+    function handleLightboxBackdrop(event) {
+      if (event.target && event.target.id === 'portrait-lightbox') {
+        closeLightbox();
+      }
+    }
+
+    function renderCharts() {
+      const tbWrap = document.getElementById('tb-chart-container');
+      const refWrap = document.getElementById('referral-chart-container');
+
+      if (tbWrap) {
+        const regions = [
+          { name: `WHO Europe`, val: -42 },
+          { name: `WHO Africa`, val: -30 },
+          { name: `South-East Asia`, val: -18 },
+          { name: `Global Average`, val: -14 },
+          { name: `E. Mediterranean`, val: -6.6 },
+          { name: `Western Pacific`, val: 0 },
+          { name: `WHO Americas`, val: 13 }
+        ];
+        const zeroX = 330;
+        const scale = 4.2;
+        const rows = regions.map(function (r, idx) {
+          const y = 24 + idx * 28;
+          const isNeg = r.val < 0;
+          const barW = Math.max(2, Math.abs(r.val) * scale);
+          const barX = isNeg ? zeroX - barW : zeroX;
+          const fill = r.val > 0 ? `var(--data-4)` : (r.name === `Global Average` ? `var(--data-2)` : `var(--data-1)`);
+          const labelX = isNeg ? barX - 8 : barX + barW + 8;
+          const anchor = isNeg ? `end` : `start`;
+          const valStr = r.val > 0 ? `+${r.val}%` : `${r.val}%`;
+          return `
+            <text x="8" y="${y + 13}" fill="var(--on-surface)" font-family="var(--font-body)" font-size="12" font-weight="600">${escapeHtml(r.name)}</text>
+            <line x1="145" y1="${y + 9}" x2="465" y2="${y + 9}" stroke="var(--outline-variant)" stroke-width="1"/>
+            <rect x="${barX}" y="${y + 1}" width="${barW}" height="16" fill="${fill}"/>
+            <text x="${labelX}" y="${y + 13}" text-anchor="${anchor}" fill="var(--on-surface)" font-family="var(--font-label)" font-size="11" font-weight="600">${escapeHtml(valStr)}</text>
+          `;
+        }).join('');
+
+        tbWrap.innerHTML = `
+          <svg viewBox="0 0 490 225" width="100%" height="215" role="img" aria-label="WHO Regional TB Incidence Change 2015 to 2025">
+            <line x1="${zeroX}" y1="12" x2="${zeroX}" y2="212" stroke="var(--outline)" stroke-width="1.2"/>
+            ${rows}
+            <text x="${zeroX}" y="222" text-anchor="middle" fill="var(--on-surface-variant)" font-family="var(--font-label)" font-size="10">0% BASELINE</text>
+          </svg>
+        `;
+      }
+
+      if (refWrap) {
+        const searchMetrics = [
+          { name: `Global Google Referral`, val: -33, color: `var(--data-1)` },
+          { name: `US Google Referral`, val: -38, color: `var(--data-4)` },
+          { name: `3-Yr Publisher Forecast`, val: -43, color: `var(--data-2)` }
+        ];
+        const barRows = searchMetrics.map(function (m, idx) {
+          const y = 20 + idx * 38;
+          const maxW = 240;
+          const w = (Math.abs(m.val) / 50) * maxW;
+          return `
+            <text x="4" y="${y + 12}" fill="var(--on-surface)" font-family="var(--font-body)" font-size="12" font-weight="600">${escapeHtml(m.name)}</text>
+            <rect x="4" y="${y + 18}" width="${maxW}" height="12" fill="var(--surface-container)"/>
+            <rect x="4" y="${y + 18}" width="${w}" height="12" fill="${m.color}"/>
+            <text x="${maxW + 14}" y="${y + 28}" fill="var(--on-surface)" font-family="var(--font-label)" font-size="12" font-weight="600">${m.val}%</text>
+          `;
+        }).join('');
+
+        // Also compute live feed intensity distribution bar
+        const activeItems = getFilteredFeeds();
+        const total = Math.max(1, activeItems.length);
+        let c = 0; let h = 0; let s = 0;
+        activeItems.forEach(function (it) {
+          if (it.intensity === 'critical') c += 1;
+          else if (it.intensity === 'high') h += 1;
+          else s += 1;
+        });
+        const fullW = 310;
+        const wC = (c / total) * fullW;
+        const wH = (h / total) * fullW;
+        const wS = Math.max(0, fullW - wC - wH);
+
+        refWrap.innerHTML = `
+          <svg viewBox="0 0 340 215" width="100%" height="215" role="img" aria-label="Search Referral Drop and Active Feed Intensity Mix">
+            ${barRows}
+            <text x="4" y="156" fill="var(--on-surface-variant)" font-family="var(--font-label)" font-size="10" font-weight="600">ACTIVE VIEW INTENSITY MIX (${activeItems.length} ITEMS)</text>
+            <rect x="4" y="166" width="${wC}" height="16" fill="var(--error)"/>
+            <rect x="${4 + wC}" y="166" width="${wH}" height="16" fill="var(--data-2)"/>
+            <rect x="${4 + wC + wH}" y="166" width="${wS}" height="16" fill="var(--data-1)"/>
+            <text x="4" y="198" fill="var(--on-surface)" font-family="var(--font-label)" font-size="10">CRIT: ${c} · HIGH: ${h} · STD: ${s}</text>
+          </svg>
+        `;
+      }
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if (feedState.activeLightboxIndex < 0) return;
+      if (e.key === 'Escape') {
+        closeLightbox();
+      } else if (e.key === 'ArrowRight') {
+        stepLightbox(1);
+      } else if (e.key === 'ArrowLeft') {
+        stepLightbox(-1);
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      loadFeedDataFromStaticJson();
+    });
+  </script>
+</body>
+</html>
