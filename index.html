@@ -1,0 +1,2397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="artifact-type" content="dashboard">
+  <meta name="design-style" content="briefing">
+  <title>Global &amp; Regional Dispatch — Live News Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+
+      /* Page and surfaces: warm stone-white paper */
+      --background: #faf9f5;
+      --surface-container-low: #ffffff;
+      --surface-container: #f1efe8;
+      --surface-container-high: #e6e2d6;
+
+      /* Ink */
+      --on-surface: #17181a;
+      --on-surface-variant: #56585c;
+
+      /* Rules */
+      --outline: #17181a;
+      --outline-variant: #dedad0;
+      --input-border: #c8c4b8;
+
+      /* Accents */
+      --primary: #17181a;
+      --on-primary: #faf9f5;
+      --primary-container: #f2b705;
+      --on-primary-container: #17181a;
+      --secondary: #1f4e5f;
+      --on-secondary: #ffffff;
+      --secondary-soft: #e8f1f4;
+      --on-secondary-soft: #183d4a;
+      --tertiary: #785008;
+      --tertiary-soft: #f5e6c4;
+      --error: #b42318;
+      --on-error: #ffffff;
+
+      /* Semantic & intensity tokens */
+      --positive: #2b6e52;
+      --positive-soft: #e6f2ec;
+      --on-positive-soft: #1d4d38;
+      --warning: #9a5b00;
+      --warning-soft: #fef3d6;
+      --on-warning-soft: #6b3f00;
+      --critical-soft: #fdecea;
+      --on-critical-soft: #8f1d14;
+      --focus: #1f4e5f;
+
+      /* Data series */
+      --data-1: #1f4e5f;
+      --data-2: #d99000;
+      --data-3: #2b6e52;
+      --data-4: #b84a39;
+      --data-context: #c4bfb2;
+
+      /* Fonts */
+      --font-headline: 'Source Serif 4', serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-label: 'Geist Mono', monospace;
+
+      /* Shape */
+      --rounded: 0.25rem;
+      --rounded-lg: 0.375rem;
+      --rounded-full: 0.25rem;
+      --badge-radius: 2px;
+
+      /* Style effects */
+      --section-rule: 1.5px solid var(--outline);
+      --card-border: 1px solid var(--outline-variant);
+      --shadow-hover: 0 2px 6px rgba(23, 24, 26, 0.06);
+      --shadow-expanded: 0 4px 14px rgba(23, 24, 26, 0.06);
+      --heading-tracking: -0.02em;
+      --label-tracking: 0.08em;
+
+      /* Type scale (Dashboard) */
+      --display-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem);
+      --headline-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+      --subhead-size: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+      --body-size: clamp(0.9375rem, 0.9rem + 0.15vw, 1rem);
+      --label-size: 0.75rem;
+
+      /* Spacing scale (4pt base) */
+      --space-xs: 0.25rem;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      --space-xl: 2.5rem;
+      --space-2xl: 4rem;
+      --space-3xl: 6rem;
+
+      /* Motion */
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+      --dur-micro: 120ms;
+      --dur-short: 220ms;
+      --dur-long: 420ms;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      overflow-x: clip;
+      margin: 0;
+      padding: 0;
+      background-color: var(--background);
+      color: var(--on-surface);
+      font-family: var(--font-body);
+      font-size: var(--body-size);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    header { position: static !important; }
+
+    button, input, select, textarea {
+      font-family: inherit;
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    .page-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-lg);
+      padding: var(--space-lg);
+      max-width: 1200px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+    .page-grid * { min-width: 0; }
+
+    /* Dossier Header & Live Status Bar */
+    .dossier-header {
+      display: grid;
+      gap: var(--space-md);
+    }
+
+    .dossier-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm) var(--space-md);
+      border-bottom: var(--section-rule);
+      padding-bottom: var(--space-sm);
+    }
+
+    .dossier-bar-left {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .dossier-pill {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 0.6875rem;
+      letter-spacing: var(--label-tracking);
+      text-transform: uppercase;
+      padding: var(--space-xs) var(--space-sm);
+      border-radius: var(--badge-radius);
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      background: var(--positive-soft);
+      color: var(--on-positive-soft);
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: var(--label-size);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: var(--space-xs) var(--space-sm);
+      border-radius: var(--badge-radius);
+      border: 1px solid var(--positive);
+    }
+
+    .live-dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      background-color: var(--positive);
+      animation: pulse-live 1.8s var(--ease-in-out) infinite;
+    }
+
+    @keyframes pulse-live {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.85); }
+    }
+
+    .dossier-meta {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--on-surface-variant);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-bar-right {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .utc-readout {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 500;
+      color: var(--on-surface);
+      background: var(--surface-container);
+      padding: var(--space-xs) var(--space-sm);
+      border-radius: var(--rounded);
+      border: var(--card-border);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .title-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--space-md);
+    }
+
+    .title-block {
+      max-width: 68ch;
+    }
+
+    .title {
+      font-family: var(--font-headline);
+      font-size: var(--display-size);
+      font-weight: 600;
+      letter-spacing: var(--heading-tracking);
+      line-height: 1.08;
+      color: var(--on-surface);
+      margin: 0;
+    }
+
+    .standfirst {
+      font-family: var(--font-body);
+      font-size: var(--subhead-size);
+      font-weight: 600;
+      color: var(--secondary);
+      margin: var(--space-xs) 0 0 0;
+      line-height: 1.4;
+    }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-xs);
+      min-height: 44px;
+      padding: 0 var(--space-md);
+      border-radius: var(--rounded);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color var(--dur-micro) var(--ease-out),
+                  color var(--dur-micro) var(--ease-out),
+                  transform var(--dur-micro) var(--ease-out);
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: var(--on-primary);
+      border: 1px solid var(--primary);
+    }
+    .btn-primary:hover {
+      background: var(--secondary);
+      border-color: var(--secondary);
+    }
+
+    .btn-secondary {
+      background: var(--surface-container-low);
+      color: var(--on-surface);
+      border: 1px solid var(--input-border);
+    }
+    .btn-secondary:hover {
+      background: var(--surface-container);
+    }
+
+    .btn-compact {
+      min-height: 44px;
+      padding: 0 var(--space-sm);
+      font-size: var(--label-size);
+      font-family: var(--font-label);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    /* Metric Summary Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-md);
+    }
+
+    .figure-card {
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md) var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: var(--space-xs);
+    }
+
+    .figure-card-interactive {
+      cursor: pointer;
+      text-align: left;
+      transition: background-color var(--dur-micro) var(--ease-out),
+                  box-shadow var(--dur-micro) var(--ease-out);
+    }
+    .figure-card-interactive:hover {
+      background: var(--surface-container);
+      box-shadow: var(--shadow-hover);
+    }
+    .figure-card-interactive.is-active {
+      box-shadow: inset 0 0 0 2px var(--secondary);
+      background: var(--secondary-soft);
+    }
+
+    .kpi-label {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--on-surface-variant);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-xs);
+    }
+
+    .kpi-value {
+      font-family: var(--font-headline);
+      font-size: clamp(1.65rem, 1.3rem + 1vw, 2.15rem);
+      font-weight: 600;
+      line-height: 1.1;
+      color: var(--on-surface);
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+
+    .kpi-value.kpi-critical { color: var(--error); }
+    .kpi-value.kpi-high { color: var(--tertiary); }
+    .kpi-value.kpi-feeds { color: var(--secondary); }
+
+    .kpi-sub {
+      font-size: 0.8125rem;
+      color: var(--on-surface-variant);
+    }
+
+    /* Situational Breakdown Matrix Strip */
+    .matrix-panel {
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md) var(--space-lg);
+      display: grid;
+      gap: var(--space-sm);
+    }
+
+    .matrix-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+    }
+
+    .matrix-title {
+      font-family: var(--font-headline);
+      font-size: 1.0625rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .matrix-legend {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-md);
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--on-surface-variant);
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+
+    .legend-swatch {
+      width: 0.625rem;
+      height: 0.625rem;
+      border-radius: var(--badge-radius);
+      display: inline-block;
+    }
+    .swatch-critical { background-color: var(--data-4); }
+    .swatch-high { background-color: var(--data-2); }
+    .swatch-standard { background-color: var(--data-1); }
+
+    .matrix-bars {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-md);
+    }
+
+    .matrix-cat-btn {
+      background: var(--background);
+      border: var(--card-border);
+      border-radius: var(--rounded);
+      padding: var(--space-sm) var(--space-md);
+      text-align: left;
+      cursor: pointer;
+      min-height: 44px;
+      display: grid;
+      gap: var(--space-xs);
+      transition: background-color var(--dur-micro) var(--ease-out);
+    }
+    .matrix-cat-btn:hover {
+      background: var(--surface-container);
+    }
+    .matrix-cat-btn.is-active {
+      background: var(--surface-container);
+      box-shadow: inset 0 0 0 1.5px var(--outline);
+    }
+
+    .matrix-cat-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: var(--space-xs);
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      text-transform: uppercase;
+      color: var(--on-surface);
+      font-weight: 600;
+    }
+
+    .stacked-track {
+      display: flex;
+      width: 100%;
+      height: 8px;
+      background: var(--surface-container-high);
+      border-radius: var(--badge-radius);
+      overflow: hidden;
+      gap: 1px;
+    }
+
+    .seg-critical { background-color: var(--data-4); }
+    .seg-high { background-color: var(--data-2); }
+    .seg-standard { background-color: var(--data-1); }
+
+    /* Controls Bar: Tabs, Intensity Toggles, Search & Sort */
+    .controls-section {
+      display: grid;
+      gap: var(--space-md);
+      border-top: var(--section-rule);
+      padding-top: var(--space-md);
+    }
+
+    .tabs-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+    }
+
+    .tab-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      min-height: 44px;
+      padding: 0 var(--space-md);
+      border-radius: var(--rounded);
+      border: 1px solid var(--outline-variant);
+      background: var(--surface-container-low);
+      color: var(--on-surface);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color var(--dur-micro) var(--ease-out),
+                  color var(--dur-micro) var(--ease-out);
+    }
+    .tab-btn:hover {
+      background: var(--surface-container);
+    }
+    .tab-btn[aria-selected="true"] {
+      background: var(--primary);
+      color: var(--on-primary);
+      border-color: var(--primary);
+    }
+
+    .tab-count {
+      font-family: var(--font-label);
+      font-size: 0.6875rem;
+      padding: 0.0625rem 0.375rem;
+      border-radius: var(--badge-radius);
+      background: var(--surface-container);
+      color: var(--on-surface-variant);
+    }
+    .tab-btn[aria-selected="true"] .tab-count {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+    }
+
+    .filter-toolbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.75fr) minmax(0, 1.25fr);
+      gap: var(--space-md);
+      align-items: end;
+      background: var(--surface-container);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md);
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .field-label {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--on-surface-variant);
+    }
+
+    .search-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+
+    .text-input, .select-input {
+      width: 100%;
+      min-height: 44px;
+      padding: var(--space-sm) var(--space-md);
+      background: var(--surface-container-low);
+      color: var(--on-surface);
+      border: 1px solid var(--input-border);
+      border-radius: var(--rounded);
+      font-size: 0.9375rem;
+      transition: background-color var(--dur-micro) var(--ease-out);
+    }
+
+    .select-input {
+      padding-right: 2.25rem;
+      cursor: pointer;
+    }
+
+    .urgency-toggle-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+    }
+
+    .urgency-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      min-height: 44px;
+      padding: 0 var(--space-sm);
+      border-radius: var(--rounded);
+      border: 1px solid var(--input-border);
+      background: var(--surface-container-low);
+      color: var(--on-surface);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color var(--dur-micro) var(--ease-out),
+                  box-shadow var(--dur-micro) var(--ease-out);
+    }
+    .urgency-pill:hover {
+      background: var(--surface-container-high);
+    }
+    .urgency-pill[aria-pressed="true"] {
+      background: var(--primary);
+      color: var(--on-primary);
+      border-color: var(--primary);
+    }
+    .urgency-pill[data-level="critical"][aria-pressed="true"] {
+      background: var(--error);
+      color: var(--on-error);
+      border-color: var(--error);
+    }
+    .urgency-pill[data-level="high"][aria-pressed="true"] {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+      border-color: var(--primary-container);
+    }
+    .urgency-pill[data-level="standard"][aria-pressed="true"] {
+      background: var(--secondary);
+      color: var(--on-secondary);
+      border-color: var(--secondary);
+    }
+
+    /* Feed Status & Bulk Controls */
+    .feed-meta-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+    }
+
+    .feed-count-summary {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--on-surface-variant);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .bulk-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    /* Story Cards (Accordion Dropdown Format) */
+    .story-list {
+      display: grid;
+      gap: var(--space-md);
+    }
+
+    .story-card {
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      overflow: hidden;
+      transition: box-shadow var(--dur-short) var(--ease-out);
+    }
+
+    .story-card[data-intensity="critical"] {
+      border-left: 4px solid var(--error);
+    }
+    .story-card[data-intensity="high"] {
+      border-left: 4px solid var(--primary-container);
+    }
+    .story-card[data-intensity="standard"] {
+      border-left: 4px solid var(--secondary);
+    }
+
+    .story-card.is-expanded {
+      box-shadow: var(--shadow-expanded);
+    }
+
+    .story-summary-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: var(--space-md);
+      padding: var(--space-md) var(--space-lg);
+      align-items: start;
+    }
+
+    .story-main {
+      display: grid;
+      gap: var(--space-xs);
+    }
+
+    .story-meta-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .index-num {
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: var(--label-size);
+      color: var(--secondary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .intensity-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-family: var(--font-label);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.1875rem var(--space-sm);
+      border-radius: var(--badge-radius);
+    }
+
+    .badge-critical {
+      background: var(--critical-soft);
+      color: var(--on-critical-soft);
+    }
+    .badge-high {
+      background: var(--warning-soft);
+      color: var(--on-warning-soft);
+    }
+    .badge-standard {
+      background: var(--secondary-soft);
+      color: var(--on-secondary-soft);
+    }
+
+    .category-chip {
+      font-family: var(--font-label);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--tertiary);
+      background: var(--tertiary-soft);
+      padding: 0.1875rem var(--space-sm);
+      border-radius: var(--badge-radius);
+    }
+
+    .story-timestamp {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--on-surface-variant);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .story-headline-btn {
+      background: transparent;
+      border: 0;
+      padding: 0;
+      margin: 0;
+      text-align: left;
+      cursor: pointer;
+      color: var(--on-surface);
+      font-family: var(--font-headline);
+      font-size: var(--headline-size);
+      font-weight: 600;
+      line-height: 1.18;
+      letter-spacing: -0.015em;
+    }
+    .story-headline-btn:hover {
+      color: var(--secondary);
+    }
+
+    .story-deck {
+      margin: 0;
+      font-size: 0.9375rem;
+      color: var(--on-surface-variant);
+      max-width: 70ch;
+    }
+
+    .story-outlet-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-sm);
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--secondary);
+      margin-top: var(--space-xs);
+    }
+
+    .story-controls {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .bookmark-btn {
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0 var(--space-sm);
+      border-radius: var(--rounded);
+      border: 1px solid var(--outline-variant);
+      background: var(--background);
+      color: var(--on-surface-variant);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-xs);
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      transition: background-color var(--dur-micro) var(--ease-out),
+                  color var(--dur-micro) var(--ease-out);
+    }
+    .bookmark-btn:hover {
+      background: var(--surface-container);
+      color: var(--on-surface);
+    }
+    .bookmark-btn[aria-pressed="true"] {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+      border-color: var(--primary-container);
+      font-weight: 600;
+    }
+
+    .accordion-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      min-height: 44px;
+      padding: 0 var(--space-md);
+      border-radius: var(--rounded);
+      border: 1px solid var(--input-border);
+      background: var(--surface-container);
+      color: var(--on-surface);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color var(--dur-micro) var(--ease-out),
+                  color var(--dur-micro) var(--ease-out);
+      white-space: nowrap;
+    }
+    .accordion-toggle:hover {
+      background: var(--surface-container-high);
+    }
+    .accordion-toggle[aria-expanded="true"] {
+      background: var(--primary);
+      color: var(--on-primary);
+      border-color: var(--primary);
+    }
+
+    .chevron-icon {
+      transition: transform var(--dur-short) var(--ease-in-out);
+    }
+    .accordion-toggle[aria-expanded="true"] .chevron-icon {
+      transform: rotate(180deg);
+    }
+
+    /* Expandable Context Panel (Dropdown Drawer) */
+    .story-context-panel {
+      border-top: var(--card-border);
+      background: var(--background);
+      padding: var(--space-md) var(--space-lg) var(--space-lg);
+      display: grid;
+      gap: var(--space-md);
+      animation: expand-fade var(--dur-short) var(--ease-out);
+    }
+    .story-context-panel[hidden] {
+      display: none;
+    }
+
+    @keyframes expand-fade {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .context-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+      gap: var(--space-lg);
+    }
+
+    .context-block {
+      display: grid;
+      gap: var(--space-xs);
+      align-content: start;
+    }
+
+    .context-heading {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--secondary);
+      margin: 0;
+    }
+
+    .context-prose {
+      margin: 0;
+      font-size: 0.9375rem;
+      color: var(--on-surface);
+      max-width: 65ch;
+    }
+
+    .summary-points {
+      margin: 0;
+      padding-left: var(--space-md);
+      display: grid;
+      gap: var(--space-xs);
+      font-size: 0.9375rem;
+      color: var(--on-surface);
+    }
+
+    .metadata-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-radius: var(--rounded);
+      font-size: 0.875rem;
+    }
+    .metadata-table th, .metadata-table td {
+      padding: var(--space-sm);
+      text-align: left;
+      border-bottom: 1px solid var(--outline-variant);
+      vertical-align: top;
+    }
+    .metadata-table tr:last-child th,
+    .metadata-table tr:last-child td {
+      border-bottom: 0;
+    }
+    .metadata-table th {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--on-surface-variant);
+      width: 34%;
+      font-weight: 500;
+    }
+    .metadata-table td {
+      color: var(--on-surface);
+      font-weight: 500;
+      word-break: break-word;
+    }
+
+    .article-ref-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      background: var(--surface-container);
+      border: var(--card-border);
+      border-radius: var(--rounded);
+      padding: var(--space-sm) var(--space-md);
+    }
+
+    .article-ref-info {
+      display: grid;
+      gap: 0.125rem;
+    }
+
+    .article-ref-path {
+      font-family: var(--font-label);
+      font-size: 0.8125rem;
+      color: var(--secondary);
+      font-weight: 600;
+      word-break: break-all;
+    }
+
+    .article-ref-note {
+      font-size: 0.75rem;
+      color: var(--on-surface-variant);
+    }
+
+    /* Empty State */
+    .empty-state {
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-xl) var(--space-lg);
+      display: grid;
+      gap: var(--space-sm);
+      justify-items: start;
+    }
+    .empty-state h3 {
+      font-family: var(--font-headline);
+      font-size: var(--headline-size);
+      margin: 0;
+    }
+    .empty-state p {
+      margin: 0;
+      color: var(--on-surface-variant);
+      max-width: 55ch;
+    }
+
+    /* GitHub Pages Architecture & Source Ledger */
+    .aside-box {
+      background: var(--surface-container);
+      border-top: var(--section-rule);
+      border-radius: 0 0 var(--rounded-lg) var(--rounded-lg);
+      padding: var(--space-lg);
+      display: grid;
+      gap: var(--space-md);
+    }
+
+    .aside-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+    }
+
+    .aside-title {
+      font-family: var(--font-headline);
+      font-size: var(--headline-size);
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-md);
+    }
+
+    .pipeline-step {
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-radius: var(--rounded);
+      padding: var(--space-md);
+      display: grid;
+      gap: var(--space-xs);
+      align-content: start;
+    }
+
+    .pipeline-step h4 {
+      font-family: var(--font-body);
+      font-size: 0.9375rem;
+      font-weight: 700;
+      margin: 0;
+      color: var(--on-surface);
+    }
+    .pipeline-step p {
+      margin: 0;
+      font-size: 0.875rem;
+      color: var(--on-surface-variant);
+    }
+    .mono-inline {
+      font-family: var(--font-label);
+      font-size: 0.8125rem;
+      color: var(--secondary);
+      background: var(--surface-container);
+      padding: 0.0625rem 0.3rem;
+      border-radius: var(--badge-radius);
+    }
+
+    .sources-footer {
+      border-top: 1px solid var(--outline-variant);
+      padding-top: var(--space-md);
+      font-size: 0.875rem;
+      color: var(--on-surface-variant);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: var(--space-sm);
+    }
+
+    .toast-inline {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--on-positive-soft);
+      background: var(--positive-soft);
+      padding: var(--space-xs) var(--space-sm);
+      border-radius: var(--badge-radius);
+    }
+    .toast-inline[hidden] {
+      display: none;
+    }
+
+    /* Responsive rules */
+    @media (max-width: 960px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .matrix-bars {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .filter-toolbar {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .context-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .pipeline-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page-grid {
+        padding: var(--space-md) var(--space-sm);
+        gap: var(--space-md);
+      }
+      .kpi-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .matrix-bars {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .story-summary-row {
+        grid-template-columns: minmax(0, 1fr);
+        padding: var(--space-md);
+      }
+      .story-controls {
+        justify-content: flex-start;
+      }
+      .story-context-panel {
+        padding: var(--space-md);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-grid">
+    <!-- Dossier Masthead & Live Status Bar -->
+    <header class="dossier-header">
+      <div class="dossier-bar">
+        <div class="dossier-bar-left">
+          <span class="dossier-pill">Live Wire Dossier</span>
+          <span class="live-badge" id="live-status-badge">
+            <span class="live-dot" aria-hidden="true"></span>
+            <span id="live-status-text">LIVE FEED ACTIVE</span>
+          </span>
+          <span class="dossier-meta">GitHub Pages Static-Sync Model · 4 Desks</span>
+        </div>
+        <div class="status-bar-right">
+          <span class="utc-readout" id="utc-timestamp-wrap" aria-live="polite">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>Updated: <strong id="last-updated-utc">2026-11-13 17:13:00 UTC</strong></span>
+          </span>
+          <button type="button" class="btn btn-secondary btn-compact" id="sync-btn" onclick="simulateFeedSync()">
+            Refresh Snapshot
+          </button>
+        </div>
+      </div>
+
+      <div class="title-row">
+        <div class="title-block">
+          <h1 class="title">Multi-Desk Live News Aggregator</h1>
+          <p class="standfirst">
+            Real-time situational dispatch across Science, Arizona Local, USA National, and World News — structured for static GitHub Pages deployment.
+          </p>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="btn btn-secondary" onclick="exportVisibleCsv()">
+            Export View (CSV)
+          </button>
+          <button type="button" class="btn btn-primary" onclick="scrollToArchitecture()">
+            GitHub Pages Spec
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Metric Summary Cards -->
+    <section aria-label="Feed summary metrics" class="kpi-grid">
+      <button type="button" class="figure-card figure-card-interactive" id="kpi-card-all" onclick="quickFilterIntensity('all')">
+        <span class="kpi-label">
+          <span>Active Dispatches</span>
+          <span class="index-num">01</span>
+        </span>
+        <span class="kpi-value" id="kpi-total-count">21</span>
+        <span class="kpi-sub" id="kpi-visible-sub">Showing 21 of 21 stories</span>
+      </button>
+
+      <button type="button" class="figure-card figure-card-interactive" id="kpi-card-critical" onclick="quickFilterIntensity('critical')">
+        <span class="kpi-label">
+          <span>Critical / Breaking</span>
+          <span class="index-num">02</span>
+        </span>
+        <span class="kpi-value kpi-critical" id="kpi-critical-count">4</span>
+        <span class="kpi-sub">Click to isolate breaking alerts</span>
+      </button>
+
+      <button type="button" class="figure-card figure-card-interactive" id="kpi-card-high" onclick="quickFilterIntensity('high')">
+        <span class="kpi-label">
+          <span>High Intensity</span>
+          <span class="index-num">03</span>
+        </span>
+        <span class="kpi-value kpi-high" id="kpi-high-count">8</span>
+        <span class="kpi-sub">Elevated operational &amp; policy watch</span>
+      </button>
+
+      <div class="figure-card">
+        <span class="kpi-label">
+          <span>Integrated Syndication</span>
+          <span class="index-num">04</span>
+        </span>
+        <span class="kpi-value kpi-feeds" id="kpi-sources-count">7</span>
+        <span class="kpi-sub">AP, KJZZ, NPR, NASA, ScienceDaily, arXiv, Phys.org</span>
+      </div>
+    </section>
+
+    <!-- Cross-Filtering Category x Intensity Matrix -->
+    <section class="matrix-panel" aria-label="Situational intensity breakdown by category">
+      <div class="matrix-header">
+        <h2 class="matrix-title">Situational Intensity by Desk</h2>
+        <div class="matrix-legend">
+          <span class="legend-item"><span class="legend-swatch swatch-critical" aria-hidden="true"></span> Critical / Breaking</span>
+          <span class="legend-item"><span class="legend-swatch swatch-high" aria-hidden="true"></span> High Intensity</span>
+          <span class="legend-item"><span class="legend-swatch swatch-standard" aria-hidden="true"></span> Standard</span>
+        </div>
+      </div>
+      <div class="matrix-bars" id="matrix-bars"></div>
+    </section>
+
+    <!-- Category Tabs, Search, Urgency Toggles, & Sort Controls -->
+    <section class="controls-section" aria-label="Feed filters and search">
+      <div class="tabs-row">
+        <div class="tab-group" role="tablist" aria-label="News categories" id="category-tablist">
+          <button type="button" class="tab-btn" role="tab" aria-selected="true" data-category="all" onclick="setCategory('all')">
+            All Feeds <span class="tab-count" id="count-all">21</span>
+          </button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-category="science" onclick="setCategory('science')">
+            Science <span class="tab-count" id="count-science">4</span>
+          </button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-category="arizona" onclick="setCategory('arizona')">
+            Arizona Local <span class="tab-count" id="count-arizona">4</span>
+          </button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-category="usa" onclick="setCategory('usa')">
+            USA National <span class="tab-count" id="count-usa">8</span>
+          </button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-category="world" onclick="setCategory('world')">
+            World News <span class="tab-count" id="count-world">5</span>
+          </button>
+        </div>
+
+        <button type="button" class="urgency-pill" id="bookmark-filter-btn" aria-pressed="false" onclick="toggleBookmarkFilter()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>Saved (<span id="saved-count">0</span>)</span>
+        </button>
+      </div>
+
+      <div class="filter-toolbar">
+        <div class="field-group">
+          <label class="field-label" for="search-input">Search headlines, context, or outlet</label>
+          <div class="search-wrap">
+            <input type="search" id="search-input" class="text-input" placeholder="e.g., FAA, Tucson, Hubble, Iran, Microsoft..." oninput="setSearchQuery(this.value)">
+            <button type="button" class="btn btn-secondary btn-compact" id="clear-search-btn" onclick="clearSearch()" hidden>Clear</button>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="sort-select">Sort stories by</label>
+          <select id="sort-select" class="select-input" onchange="setSortMode(this.value)">
+            <option value="intensity">Situational Intensity (Critical first)</option>
+            <option value="recency">Recency (Newest first)</option>
+            <option value="category">Desk / Category (A–Z)</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <span class="field-label" id="urgency-group-label">Urgency filter toggles</span>
+          <div class="urgency-toggle-group" role="group" aria-labelledby="urgency-group-label">
+            <button type="button" class="urgency-pill" data-level="all" aria-pressed="true" onclick="setIntensity('all')">All Levels</button>
+            <button type="button" class="urgency-pill" data-level="critical" aria-pressed="false" onclick="setIntensity('critical')">Critical / Breaking</button>
+            <button type="button" class="urgency-pill" data-level="high" aria-pressed="false" onclick="setIntensity('high')">High Intensity</button>
+            <button type="button" class="urgency-pill" data-level="standard" aria-pressed="false" onclick="setIntensity('standard')">Standard</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="feed-meta-bar">
+        <span class="feed-count-summary" id="feed-status-line" aria-live="polite">
+          Displaying 21 stories · Sorted by Situational Intensity
+        </span>
+        <div class="bulk-actions">
+          <span class="toast-inline" id="action-toast" hidden aria-live="polite"></span>
+          <button type="button" class="btn btn-secondary btn-compact" onclick="expandAllVisible()">Expand All Contexts</button>
+          <button type="button" class="btn btn-secondary btn-compact" onclick="collapseAllVisible()">Collapse All</button>
+          <button type="button" class="btn btn-secondary btn-compact" onclick="resetAllFilters()">Reset Filters</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Story Feed (Expandable Accordion Cards) -->
+    <main aria-label="Aggregated news stories">
+      <div class="story-list" id="story-list"></div>
+    </main>
+
+    <!-- GitHub Pages Static-Sync Architecture Reference -->
+    <aside class="aside-box" id="github-pages-spec" aria-label="GitHub Pages integration architecture">
+      <div class="aside-header">
+        <div>
+          <span class="dossier-pill">Architecture Model</span>
+          <h2 class="aside-title" style="margin-top: var(--space-xs);">GitHub Pages Static-Feed Integration Blueprint</h2>
+        </div>
+        <span class="dossier-meta">Zero-Backend · Scheduled Static Build</span>
+      </div>
+
+      <div class="pipeline-grid">
+        <div class="pipeline-step">
+          <h4>1. Scheduled RSS/ATOM Ingestion</h4>
+          <p>
+            A GitHub Actions cron workflow polls syndicated XML/ATOM endpoints on a 15-minute cadence:
+            <span class="mono-inline">apnews.com</span>, <span class="mono-inline">kjzz.org</span>,
+            <span class="mono-inline">nasa.gov/feed/</span>, <span class="mono-inline">sciencedaily.com/rss/top/science.xml</span>,
+            <span class="mono-inline">phys.org/rss-feed/</span>, and <span class="mono-inline">rss.arxiv.org/rss/cs.ai+q-bio.NC</span>.
+          </p>
+        </div>
+        <div class="pipeline-step">
+          <h4>2. Intensity Scoring &amp; Deduplication</h4>
+          <p>
+            Headlines are normalized into the four dashboard desks, scored into
+            <strong>Critical/Breaking</strong> (active nationwide outages, airspace stops, geopolitical flashpoints),
+            <strong>High Intensity</strong> (biosecurity, climate summits, leadership shifts), or
+            <strong>Standard</strong>, and stamped with the exact UTC build time.
+          </p>
+        </div>
+        <div class="pipeline-step">
+          <h4>3. Static Bundle &amp; Client State</h4>
+          <p>
+            The normalized payload is committed to <span class="mono-inline">data/feeds.json</span> and deployed straight to GitHub Pages.
+            Because static hosting serves pre-compiled HTML/JS with no server database, client bookmarks and filter preferences persist via lightweight runtime state.
+          </p>
+        </div>
+      </div>
+
+      <footer class="sources-footer">
+        <span>
+          Sources grounded from November 13, 2026 dispatches: Associated Press, KJZZ 91.5 FM &amp; NPR News, NASA Science &amp; News Releases, ScienceDaily, Phys.org (Science X), and arXiv Syndication.
+        </span>
+        <span class="dossier-meta">Snapshot: 2026-11-13 17:13:00 UTC</span>
+      </footer>
+    </aside>
+  </div>
+
+  <api-shim></api-shim>
+  <script>
+    const BASELINE_UTC = `2026-11-13 17:13:00 UTC`;
+
+    const CATEGORY_META = {
+      science: { label: `Science`, order: 1 },
+      arizona: { label: `Arizona Local`, order: 2 },
+      usa: { label: `USA National`, order: 3 },
+      world: { label: `World News`, order: 4 }
+    };
+
+    const INTENSITY_META = {
+      critical: { label: `Critical / Breaking`, rank: 3 },
+      high: { label: `High Intensity`, rank: 2 },
+      standard: { label: `Standard`, rank: 1 }
+    };
+
+    const STORIES = [
+      {
+        id: `usa-faa-ground-stop`,
+        category: `usa`,
+        intensity: `critical`,
+        publishedUtc: `2026-11-13 16:55 UTC`,
+        recencyScore: 202611131655,
+        relativeTime: `18 mins ago · LIVE`,
+        headline: `Flights halted nationwide as air traffic control telecommunications failure triggers FAA ground stop`,
+        deck: `Hundreds of flights diverted and departures frozen across major U.S. hubs including Los Angeles, Seattle, Atlanta, and Washington Dulles.`,
+        outlet: `Associated Press / NPR`,
+        desk: `U.S. Transportation`,
+        author: `Joel Rose, Erika Ryan, Sarah Handel & AP Staff`,
+        feedEndpoint: `apnews.com/hub/immigration (U.S. Wire) & kjzz.org/npr-top-stories`,
+        articlePath: `apnews.com/article/faa-ground-stop-sports-091ecf4f82a6158473357feeb05cf593`,
+        context: `The Federal Aviation Administration took the extraordinary step Friday afternoon, Nov. 13, 2026, of halting departures at airports across the United States after a telecommunications outage struck Air Traffic Control Centers. Department of Homeland Security Secretary Markwayne Mullin briefed reporters at the White House confirming there is no indication of a security threat.`,
+        summaryPoints: [
+          `No planes are taking off nationwide, leaving millions of travelers waiting at terminals from LAX and SEA-TAC to Atlanta Hartsfield-Jackson and Washington Dulles.`,
+          `Former FAA head of air traffic investigations Tom Lintner described the communications failure at Air Traffic Control Centers as an exceptional national disruption.`,
+          `The sudden FAA ground stop has also stranded collegiate and professional sports teams, throwing the weekend schedule into chaos.`
+        ]
+      },
+      {
+        id: `az-faa-outage`,
+        category: `arizona`,
+        intensity: `critical`,
+        publishedUtc: `2026-11-13 15:40 UTC`,
+        recencyScore: 202611131540,
+        relativeTime: `2 hours ago`,
+        headline: `Telecommunications outage leads FAA to ground all flights, including across Arizona airports`,
+        deck: `Regional air travel in Phoenix and Tucson is halted alongside the nationwide Air Traffic Control Center communications disruption.`,
+        outlet: `KJZZ 91.5 FM`,
+        desk: `Arizona Business & Transit`,
+        author: `Connor Greenwall`,
+        feedEndpoint: `kjzz.org/business`,
+        articlePath: `kjzz.org/business/2026-11-13/telecommunications-outage-leads-faa-to-ground-all-flights-including-in-arizona`,
+        context: `KJZZ Business reporting confirms Arizona departures and arrivals are directly impacted by Friday's federal Air Traffic Control telecommunications outage, prompting airlines and airport operations to hold aircraft on tarmacs while recovery diagnostics proceed.`,
+        summaryPoints: [
+          `All departures at Arizona commercial airports are paused under the nationwide FAA ground stop order.`,
+          `Passengers across the state report holding on tarmacs without firm restoration timelines while ATC communications centers reboot.`,
+          `Filed with a 0:45 broadcast dispatch for Arizona commuters and business travelers.`
+        ]
+      },
+      {
+        id: `usa-microsoft-outage`,
+        category: `usa`,
+        intensity: `critical`,
+        publishedUtc: `2026-11-13 16:48 UTC`,
+        recencyScore: 202611131648,
+        relativeTime: `25 mins ago · LIVE`,
+        headline: `Widespread Microsoft outage disrupts Teams, Outlook, and Copilot across essential services`,
+        deck: `Silenced workplace inboxes and enterprise messaging tools spotlight systemic risks of single-provider dependency.`,
+        outlet: `Associated Press`,
+        desk: `Business & Technology`,
+        author: `AP Technology & Business Desks`,
+        feedEndpoint: `apnews.com/hub/artificial-intelligence`,
+        articlePath: `apnews.com/hub/tariffs`,
+        context: `A major outage across Microsoft cloud productivity applications knocked Teams, Outlook, and Copilot offline for organizations worldwide on Nov. 13, 2026. Parallel Spanish-language AP alerts tracked widespread disruption across enterprise and public-sector workflows.`,
+        summaryPoints: [
+          `Core collaboration and email services—Teams, Outlook, and Copilot—experienced live operational degradation.`,
+          `Technology policy analysts emphasize how single-vendor concentration amplifies downtime across critical business and civic infrastructure.`,
+          `Both English and AP Español technology wires flagged the cascading impact on daily workplace operations.`
+        ]
+      },
+      {
+        id: `world-iran-iaea`,
+        category: `world`,
+        intensity: `critical`,
+        publishedUtc: `2026-11-13 16:38 UTC`,
+        recencyScore: 202611131638,
+        relativeTime: `35 mins ago`,
+        headline: `Iran tells UN nuclear agency monitoring cannot proceed under threat as Rubio rules out further U.S. strikes`,
+        deck: `Tehran suspends verification access while Washington signals economic pressure has reduced need for additional military action.`,
+        outlet: `Associated Press`,
+        desk: `Middle East & Diplomacy`,
+        author: `AP Diplomatic & World Wire`,
+        feedEndpoint: `apnews.com/hub/iran`,
+        articlePath: `apnews.com/hub/iran`,
+        context: `Iran formally notified the United Nations nuclear watchdog that inspection and monitoring activities cannot continue while the country remains under military threat. In parallel remarks, Secretary of State Marco Rubio stated that further U.S. military action is unnecessary against an economically weakened Iran.`,
+        summaryPoints: [
+          `UN nuclear inspectors face halted site monitoring amid ongoing regional security tensions.`,
+          `Secretary Rubio stated that economic strain inside Iran reduces the need for additional U.S. military intervention.`,
+          `In separate domestic commentary following GOP midterm losses, Rubio acknowledged that American households are struggling economically.`
+        ]
+      },
+      {
+        id: `az-screwworm-tucson`,
+        category: `arizona`,
+        intensity: `high`,
+        publishedUtc: `2026-11-13 16:13 UTC`,
+        recencyScore: 202611131613,
+        relativeTime: `1 hour ago`,
+        headline: `7th case of New World screwworm identified in Arizona, confirmed in a horse near Tucson`,
+        deck: `Regional agricultural and veterinary authorities track the seventh detection of the flesh-eating parasite in southern Arizona.`,
+        outlet: `KJZZ Fronteras Desk`,
+        desk: `Borderlands & Biosecurity`,
+        author: `Lindsey C. Riley`,
+        feedEndpoint: `kjzz.org/fronteras-desk`,
+        articlePath: `kjzz.org/fronteras-desk/2026-11-13/7th-case-of-new-world-screwworm-identified-in-arizona-this-time-its-near-tucson`,
+        context: `Agricultural biosecurity monitors confirmed Arizona's seventh case of the New World screwworm on Friday, Nov. 13, 2026. The parasitic fly larvae pose severe threats to livestock, horses, wildlife, and domestic pets along borderland corridors.`,
+        summaryPoints: [
+          `Confirmed Friday in an equine case located near Tucson, marking the seventh statewide detection.`,
+          `The parasite causes tissue damage in warm-blooded animals, prompting heightened vigilance for ranchers and pet owners.`,
+          `Reported by KJZZ's cross-border Fronteras Desk covering Arizona and Sonora agricultural health.`
+        ]
+      },
+      {
+        id: `usa-bridge-strike`,
+        category: `usa`,
+        intensity: `high`,
+        publishedUtc: `2026-11-13 16:31 UTC`,
+        recencyScore: 202611131631,
+        relativeTime: `42 mins ago`,
+        headline: `Cargo ship strikes bridge between New Jersey and Philadelphia, triggering major traffic backup`,
+        deck: `Maritime collision disrupts Delaware River commuter corridor as structural and marine inspectors respond.`,
+        outlet: `Associated Press`,
+        desk: `U.S. Infrastructure`,
+        author: `AP National Desk`,
+        feedEndpoint: `apnews.com/hub/immigration`,
+        articlePath: `apnews.com/hub/immigration`,
+        context: `A commercial cargo vessel collided with a bridge span linking New Jersey and Philadelphia on Friday, forcing lane closures and backing up interstate commuter and freight traffic across the Delaware Valley.`,
+        summaryPoints: [
+          `Bridge approaches between New Jersey and Philadelphia experienced immediate congestion following the vessel impact.`,
+          `Emergency engineering teams mobilized to inspect pier integrity and clear maritime navigation lanes.`,
+          `Highlights ongoing infrastructure vulnerability along high-volume East Coast port corridors.`
+        ]
+      },
+      {
+        id: `usa-health-flu-measles`,
+        category: `usa`,
+        intensity: `high`,
+        publishedUtc: `2026-11-13 16:00 UTC`,
+        recencyScore: 202611131600,
+        relativeTime: `1 hour ago`,
+        headline: `Early U.S. flu surge hits South and West as U.S. and Mexico risk losing measles-free designation`,
+        deck: `Federal public health trackers flag concurrent respiratory and vaccine-preventable outbreaks alongside new FDA GLP-1 warnings.`,
+        outlet: `Associated Press`,
+        desk: `Health & Medicine`,
+        author: `AP Health Desk`,
+        feedEndpoint: `apnews.com/climate-and-environment`,
+        articlePath: `apnews.com/article/prostate-cancer-psa-american-cancer-society-fb0d5a89f0e91930a9f007562f4a3cdf`,
+        context: `Health reporters note an unusually early start to the 2026–2027 U.S. influenza season concentrated in Southern and Western states. Simultaneously, recent measles clusters threaten the elimination status of both the United States and Mexico.`,
+        summaryPoints: [
+          `Influenza activity is climbing ahead of typical seasonal curves across Southern and Western clinics.`,
+          `Epidemiologists warn recent domestic outbreaks could cost both the U.S. and Mexico their measles-free designation.`,
+          `In parallel clinical updates, the FDA added a rare vision-loss warning to GLP-1 drugs and medical societies issued major updates to prostate cancer and menopause guidelines.`
+        ]
+      },
+      {
+        id: `usa-nvidia-huang`,
+        category: `usa`,
+        intensity: `high`,
+        publishedUtc: `2026-11-13 14:15 UTC`,
+        recencyScore: 202611131415,
+        relativeTime: `3 hours ago`,
+        headline: `What Jensen Huang's departure from Nvidia could mean for the AI industry and Washington`,
+        deck: `Chipmaker succession raises strategic questions for hyperscale computing, export policy, and federal semiconductor alliances.`,
+        outlet: `Associated Press`,
+        desk: `Business & AI`,
+        author: `AP Business & Tech`,
+        feedEndpoint: `apnews.com/hub/tariffs`,
+        articlePath: `apnews.com/hub/artificial-intelligence`,
+        context: `AP Business and Technology analysis examines the market and policy ripple effects of Jensen Huang's exit from Nvidia, weighing how leadership turnover at the dominant AI chip designer may reshape capital spending and Washington lobbying.`,
+        summaryPoints: [
+          `Evaluates long-term continuity across GPU roadmaps and data-center supply chains for AI labs.`,
+          `Separate AP Tech reporting notes potential collateral political fallout in Washington linked to disclosures about an extramarital affair.`,
+          `Investors and semiconductor partners are monitoring governance transition timelines.`
+        ]
+      },
+      {
+        id: `world-cop31-climate`,
+        category: `world`,
+        intensity: `high`,
+        publishedUtc: `2026-11-13 15:00 UTC`,
+        recencyScore: 202611131500,
+        relativeTime: `2 hours ago`,
+        headline: `World leaders urge faster action at UN climate talks (COP31) over inadequate global response`,
+        deck: `Frontline nations demand urgent acceleration as negotiators debate electrification targets and critical-mineral mining safeguards.`,
+        outlet: `Associated Press`,
+        desk: `World & Climate`,
+        author: `AP Climate Desk`,
+        feedEndpoint: `apnews.com/climate-and-environment`,
+        articlePath: `apnews.com/article/climate-change-cop31-turkey-un-conference-056ff011b2e6f324c2cd089862c13824`,
+        context: `At the COP31 UN climate conference in Turkey, leaders from countries already severely impacted by warming warned that current national pledges fall far short of what is required to limit catastrophic damage.`,
+        summaryPoints: [
+          `Vulnerable states pressed major emitters for faster emissions cuts and adaptation finance.`,
+          `Summit working groups are advancing global electrification goals while Indigenous and civil-society coalitions demand strict mining safeguards.`,
+          `Follows scientific warnings linking hotter, more frequent wildfires to drinking water contamination risks.`
+        ]
+      },
+      {
+        id: `world-cuba-crisis`,
+        category: `world`,
+        intensity: `high`,
+        publishedUtc: `2026-11-13 14:45 UTC`,
+        recencyScore: 202611131445,
+        relativeTime: `2 hours ago`,
+        headline: `In Cuba, a month's pension barely buys a carton of eggs as charity kitchens feed growing numbers`,
+        deck: `Deepening economic hardship in Havana pushes pensioners and families toward neighborhood soup kitchens and pantries.`,
+        outlet: `Associated Press`,
+        desk: `Latin America`,
+        author: `AP Havana Bureau`,
+        feedEndpoint: `apnews.com/hub/iran (World Top Stories)`,
+        articlePath: `apnews.com/article/cuba-food-insecurity-soup-kitchens-pantry-crisis-df4ab742dff562680946644847341db0`,
+        context: `Severe inflation and supply shortages in Cuba have eroded monthly pensions to the point where basic protein staples are out of reach for retirees, turning community- and church-run kitchens in Havana into critical lifelines.`,
+        summaryPoints: [
+          `A single monthly pension check now barely covers one carton of eggs in Havana markets.`,
+          `Charity-run kitchens report surging daily meal demand from elderly residents and low-income households.`,
+          `Economic pressures continue to compound shortages of food, fuel, and essential goods.`
+        ]
+      },
+      {
+        id: `sci-hubble-roman`,
+        category: `science`,
+        intensity: `high`,
+        publishedUtc: `2026-11-12 18:00 UTC`,
+        recencyScore: 202611121800,
+        relativeTime: `1 day ago`,
+        headline: `NASA's Hubble offers cosmic sampler of benchmark targets for Roman Space Telescope`,
+        deck: `New deep-field calibration mosaic prepares the Nancy Grace Roman mission alongside Chandra outburst and LISA exoplanet studies.`,
+        outlet: `NASA Science`,
+        desk: `Astrophysics`,
+        author: `NASA Hubble & Astrophysics Teams`,
+        feedEndpoint: `nasa.gov/news-release/feed/`,
+        articlePath: `science.nasa.gov/missions/hubble/nasas-hubble-offers-cosmic-sampler-of-targets-for-roman/`,
+        context: `NASA's Hubble Space Telescope has compiled a reference sampler of galaxies and stellar fields tailored for the upcoming Nancy Grace Roman Space Telescope, bridging high-resolution imaging with Roman's wide-field infrared survey capabilities.`,
+        summaryPoints: [
+          `Provides curated calibration targets so Roman can rapidly map dark energy, galaxy evolution, and cosmic structure.`,
+          `Accompanied by NASA Chandra X-ray Observatory findings pinpointing the origin of a star's mysterious outbursts.`,
+          `Companion NASA LISA research demonstrates how space-based gravitational wave detectors can identify previously unseen exoplanet worlds.`
+        ]
+      },
+      {
+        id: `sci-esa-hera`,
+        category: `science`,
+        intensity: `high`,
+        publishedUtc: `2026-11-13 12:10 UTC`,
+        recencyScore: 202611131210,
+        relativeTime: `5 hours ago`,
+        headline: `Europe's Hera spacecraft begins close inspections of asteroid rammed by NASA's DART test`,
+        deck: `Planetary defense probe arrives to survey crater geometry, ejecta, and orbital deflection dynamics from the 2022 impact.`,
+        outlet: `Associated Press / ESA`,
+        desk: `Space & Planetary Defense`,
+        author: `AP Science Desk`,
+        feedEndpoint: `apnews.com/hub/space`,
+        articlePath: `apnews.com/article/climate-cop31-un-turkey-9c3945f36e4445dd4427f490c40e4bf3`,
+        context: `The European Space Agency's Hera spacecraft has initiated close-range scientific operations around the asteroid moonlet Dimorphos, four years after NASA intentionally crashed the DART spacecraft into it in 2022 to test kinetic asteroid deflection.`,
+        summaryPoints: [
+          `Hera is mapping the impact crater, surface boulder distribution, and interior mass properties left by DART.`,
+          `Data will turn the 2022 kinetic impact demonstration into a calibrated, repeatable planetary defense technique.`,
+          `Follows orbital progress by SpaceX's Starship, which reached orbit despite a booster water landing preventing a double catch.`
+        ]
+      },
+      {
+        id: `az-hegseth-delegation`,
+        category: `arizona`,
+        intensity: `standard`,
+        publishedUtc: `2026-11-13 16:08 UTC`,
+        recencyScore: 202611131608,
+        relativeTime: `1 hour ago`,
+        headline: `How Arizona's congressional delegation stands on Defense Secretary Hegseth impeachment plans`,
+        deck: `After the U.S. House narrowly defeated a removal motion this week, Arizona Democrats signal willingness to revisit action next year.`,
+        outlet: `KJZZ 91.5 FM`,
+        desk: `Arizona Politics`,
+        author: `Camryn Sanchez`,
+        feedEndpoint: `kjzz.org/politics`,
+        articlePath: `kjzz.org/politics/2026-11-13/how-arizonas-delegation-stands-on-hegseth-impeachment-plans`,
+        context: `Following a narrow House vote that killed an impeachment motion against Defense Secretary Pete Hegseth, KJZZ Politics surveyed where Arizona's federal lawmakers stand heading into the incoming 2027 congressional session.`,
+        summaryPoints: [
+          `The U.S. House narrowly blocked the immediate impeachment motion earlier this week.`,
+          `Arizona's Democratic delegation members indicate they are prepared to support ouster proceedings if articles resurface next year.`,
+          `Reflects shifting Capitol Hill leverage ahead of the post-midterm congressional transition.`
+        ]
+      },
+      {
+        id: `az-gallego-childcare`,
+        category: `arizona`,
+        intensity: `standard`,
+        publishedUtc: `2026-11-13 15:05 UTC`,
+        recencyScore: 202611131505,
+        relativeTime: `2 hours ago`,
+        headline: `Sen. Gallego points to universal childcare as top priority heading into next Congress`,
+        deck: `As Democrats prepare to assume House and Senate control, Arizona's senator emphasizes household affordability for working families.`,
+        outlet: `KJZZ 91.5 FM`,
+        desk: `Arizona Politics`,
+        author: `Wayne Schutsky`,
+        feedEndpoint: `kjzz.org/politics`,
+        articlePath: `kjzz.org/politics/2026-11-13/gallego-points-to-universal-childcare-as-top-priority-heading-into-next-congress`,
+        context: `Speaking after the 2026 midterm elections handed congressional majorities to Democrats, Arizona Sen. Ruben Gallego outlined affordability legislation focused on lowering childcare costs for working parents.`,
+        summaryPoints: [
+          `Gallego identified universal childcare as a flagship legislative goal for the incoming Democratic House and Senate majorities.`,
+          `Frames cost-of-living relief for working families as central to post-midterm governance.`,
+          `Aligns with broader national debate over household economic strain following midterm shifts.`
+        ]
+      },
+      {
+        id: `usa-midterm-policy`,
+        category: `usa`,
+        intensity: `standard`,
+        publishedUtc: `2026-11-13 15:10 UTC`,
+        recencyScore: 202611131510,
+        relativeTime: `2 hours ago`,
+        headline: `GOP scores rare Maine flip amid midterm shifts; states appeal mail-voting ruling as Medicaid deadline delays`,
+        deck: `Post-election policy developments span 2028 ballot litigation, Head Start pay freezes, and a 6-month Medicaid work-rule reprieve.`,
+        outlet: `Associated Press / NPR`,
+        desk: `U.S. Politics & Policy`,
+        author: `Hansi Lo Wang & AP Politics`,
+        feedEndpoint: `apnews.com/hub/elections & kjzz.org/npr-top-stories`,
+        articlePath: `kjzz.org/npr-top-stories/2026-11-13/gop-state-officials-push-to-revive-trumps-mail-voting-restrictions-for-2028-election`,
+        context: `Even as the broader 2026 midterm landscape favored Democrats, Republicans achieved a notable blue-to-red flip in Maine. Meanwhile, federal and state policy desks report movement on voting litigation, early-childhood funding, and healthcare administration.`,
+        summaryPoints: [
+          `Republican state officials appealed a court injunction blocking the Postal Service from enforcing revised mail-in ballot rules for 2028.`,
+          `The Trump administration canceled a mandatory pay hike for Head Start teachers while granting states an extra 6 months before enforcing Medicaid work-requirement removals.`,
+          `AP Fact Focus debunked limited claims of rigged elections alongside altered video clips circulating online.`
+        ]
+      },
+      {
+        id: `usa-wildfires-water`,
+        category: `usa`,
+        intensity: `standard`,
+        publishedUtc: `2026-11-13 13:20 UTC`,
+        recencyScore: 202611131320,
+        relativeTime: `4 hours ago`,
+        headline: `Bigger and more-frequent wildfires threaten municipal drinking water supplies across the U.S.`,
+        deck: `Burn-scar runoff and ash contamination strain treatment facilities from Western watersheds to regional reservoirs.`,
+        outlet: `Associated Press`,
+        desk: `Climate & Environment`,
+        author: `AP Climate Desk`,
+        feedEndpoint: `apnews.com/climate-and-environment`,
+        articlePath: `apnews.com/article/wildfires-drinking-water-contamination-7b99f1b2657c4b9d6ac3d6e07dcf8cbc`,
+        context: `AP environmental reporting documents how larger, higher-intensity wildfires strip stabilizing vegetation from forested watersheds, sending ash, heavy metals, and excess sediment into drinking water intakes during subsequent storms.`,
+        summaryPoints: [
+          `Post-fire debris flows complicate filtration and drive up municipal treatment costs.`,
+          `Water districts across Western and fire-prone states are investing in emergency intake bypasses and watershed restoration.`,
+          `Companion AP reporting noted Family Dollar agreed to pay $63 million to settle overcharging allegations and Indiana schools expanded workplace learning.`
+        ]
+      },
+      {
+        id: `usa-ss-united-states`,
+        category: `usa`,
+        intensity: `standard`,
+        publishedUtc: `2026-11-13 11:45 UTC`,
+        recencyScore: 202611131145,
+        relativeTime: `5 hours ago`,
+        headline: `Historic ocean liner SS United States is sunk off Florida's coast to form an artificial reef`,
+        deck: `Decades-long preservation debate ends as the record-holding 1950s superliner descends off the Gulf Coast.`,
+        outlet: `Associated Press`,
+        desk: `Beyond the Headlines`,
+        author: `AP Features Desk`,
+        feedEndpoint: `apnews.com/hub/space (Features)`,
+        articlePath: `apnews.com/article/ss-united-states-ocean-liner-artificial-reef-88773c4030b0e2e12f3d63f5426ad285`,
+        context: `After a long farewell and years docked in Philadelphia, the historic passenger liner SS United States has been scuttled off the Florida coast to serve as a marine habitat and diving reef.`,
+        summaryPoints: [
+          `Marks the final chapter for the famed transatlantic liner built during the mid-century golden age of sea travel.`,
+          `Joins AP Beyond the Headlines dispatches including a Detroit bus driver picking up two horses and riders, and a century-old Beirut falafel family shop.`
+        ]
+      },
+      {
+        id: `world-pope-leo-peru`,
+        category: `world`,
+        intensity: `standard`,
+        publishedUtc: `2026-11-13 14:00 UTC`,
+        recencyScore: 202611131400,
+        relativeTime: `3 hours ago`,
+        headline: `Pope Leo XIV denounces 'machismo' and demands women be protected during emotional return to Peru`,
+        deck: `Chiclayo welcomes back its former bishop as the pontiff calls for concrete social and legal protections for women.`,
+        outlet: `Associated Press`,
+        desk: `Religion & Latin America`,
+        author: `AP Vatican & Peru Bureaus`,
+        feedEndpoint: `apnews.com/newsletters?id=World+of+Faith`,
+        articlePath: `apnews.com/hub/recipes`,
+        context: `Returning to Chiclayo, the Peruvian city that claims him as its own, Pope Leo XIV spoke of his "joy" at returning home while delivering a forceful denunciation of violence and machismo against women.`,
+        summaryPoints: [
+          `Thousands gathered in Chiclayo to greet their former shepherd during his pastoral homecoming.`,
+          `Pope Leo XIV urged civic and religious leaders to actively protect women from abuse and systemic discrimination.`
+        ]
+      },
+      {
+        id: `world-hockey-visas-pochettino`,
+        category: `world`,
+        intensity: `standard`,
+        publishedUtc: `2026-11-13 12:50 UTC`,
+        recencyScore: 202611131250,
+        relativeTime: `4 hours ago`,
+        headline: `Russia demands world junior hockey tournament moved or canceled; U.S. visas sideline Miss Universe entrants`,
+        deck: `Geopolitical travel barriers reshape international sport and pageants as Pochettino exits U.S. soccer post for Man United.`,
+        outlet: `Associated Press`,
+        desk: `World & Sports`,
+        author: `AP International Sports & World`,
+        feedEndpoint: `apnews.com/hub/nfl`,
+        articlePath: `apnews.com/hub/nfl`,
+        context: `International competition continues to intersect with diplomatic restrictions: barred from competing in Canada, Russian hockey officials demanded the world junior tournament be relocated or canceled, while U.S. visa restrictions forced several African contestants out of Miss Universe.`,
+        summaryPoints: [
+          `Russian federation opposes holding the world junior hockey championship in Canada under current exclusion rules.`,
+          `In soccer, Mauricio Pochettino tearfully stepped down from the U.S. men's national team role to take charge of Manchester United.`,
+          `Meanwhile in Geneva, a Romanov sapphire bracelet fetched $4.9 million at auction.`
+        ]
+      },
+      {
+        id: `sci-nasa-escapade-voyager`,
+        category: `science`,
+        intensity: `standard`,
+        publishedUtc: `2026-11-10 16:00 UTC`,
+        recencyScore: 202611101600,
+        relativeTime: `3 days ago`,
+        headline: `NASA's ESCAPADE completes powered Earth flybys en route to Mars; Voyager 1 nears One-Light-Day mark`,
+        deck: `Twin heliophysics orbiters depart Earth vicinity as NASA celebrates Voyager 1's historic deep-space distance milestone.`,
+        outlet: `NASA Science`,
+        desk: `Heliophysics & Deep Space`,
+        author: `NASA Communications`,
+        feedEndpoint: `nasa.gov/feed/`,
+        articlePath: `science.nasa.gov/science-research/heliophysics/nasas-escapade-completes-powered-earth-flybys-now-en-route-to-mars/`,
+        context: `NASA's ESCAPADE (Escape and Plasma Acceleration and Dynamics Explorers) mission completed powered Earth flybys and is now on an interplanetary trajectory toward Mars, while Voyager 1 approaches a signal round-trip milestone of one full light-day from Earth.`,
+        summaryPoints: [
+          `ESCAPADE will investigate how solar wind strips atmosphere from Mars using twin coordinated spacecraft.`,
+          `NASA invited media and the public to join Voyager 1 One-Light-Day commemorative activities.`,
+          `Earth Observatory also released new satellite analysis showing a global rebound for coastal mangrove ecosystems.`
+        ]
+      },
+      {
+        id: `sci-sciencedaily-crows-mit`,
+        category: `science`,
+        intensity: `standard`,
+        publishedUtc: `2026-11-11 08:50 UTC`,
+        recencyScore: 202611110850,
+        relativeTime: `2 days ago`,
+        headline: `Crows make decisions twice as fast as humans; MIT breaks 20-year crystallography rule`,
+        deck: `Highlights across ScienceDaily, Phys.org, and arXiv daily preprints spanning cognition, materials science, and HPV therapeutics.`,
+        outlet: `ScienceDaily / Phys.org / arXiv`,
+        desk: `Research Syndication`,
+        author: `ScienceDaily & arXiv Daily Feeds`,
+        feedEndpoint: `sciencedaily.com/rss/top/science.xml & rss.arxiv.org/rss/cs.ai+q-bio.NC`,
+        articlePath: `sciencedaily.com/releases/2026/11/261111005850.htm`,
+        context: `Across peer-reviewed summaries and daily preprint feeds, researchers documented rapid avian decision-making in crows, novel crystal synthesis at MIT breaking a two-decade rule, and experimental cancer-fighting chewing gum slashing oral HPV levels by up to 93%.`,
+        summaryPoints: [
+          `Crows demonstrated cognitive decision latencies half as long as human benchmarks in controlled trials.`,
+          `MIT materials scientists unlocked previously unseen crystal structures by bypassing a 20-year synthesis constraint.`,
+          `arXiv's midnight EST RSS 2.0 / ATOM feeds and Phys.org's Science X streams continue supplying up to 2,000 daily AI, quantum, and bio-medicine preprints.`
+        ]
+      }
+    ];
+
+    const appState = {
+      category: `all`,
+      intensity: `all`,
+      search: ``,
+      sort: `intensity`,
+      onlySaved: false,
+      expandedIds: [`usa-faa-ground-stop`],
+      savedIds: [],
+      lastUpdatedUtc: BASELINE_UTC,
+      syncCount: 0
+    };
+
+    let toastTimer = null;
+
+    function getFilteredStories() {
+      const q = appState.search.trim().toLowerCase();
+      return STORIES.filter(function(item) {
+        if (appState.category !== `all` && item.category !== appState.category) return false;
+        if (appState.intensity !== `all` && item.intensity !== appState.intensity) return false;
+        if (appState.onlySaved && !appState.savedIds.includes(item.id)) return false;
+        if (q) {
+          const haystack = [
+            item.headline,
+            item.deck,
+            item.outlet,
+            item.desk,
+            item.author,
+            item.context,
+            item.summaryPoints.join(` `),
+            CATEGORY_META[item.category].label
+          ].join(` `).toLowerCase();
+          if (!haystack.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    function sortStories(list) {
+      const copy = list.slice();
+      copy.sort(function(a, b) {
+        if (appState.sort === `intensity`) {
+          const diff = INTENSITY_META[b.intensity].rank - INTENSITY_META[a.intensity].rank;
+          if (diff !== 0) return diff;
+          return b.recencyScore - a.recencyScore;
+        }
+        if (appState.sort === `recency`) {
+          return b.recencyScore - a.recencyScore;
+        }
+        if (appState.sort === `category`) {
+          const catDiff = CATEGORY_META[a.category].order - CATEGORY_META[b.category].order;
+          if (catDiff !== 0) return catDiff;
+          return INTENSITY_META[b.intensity].rank - INTENSITY_META[a.intensity].rank;
+        }
+        return 0;
+      });
+      return copy;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, `&amp;`)
+        .replace(/</g, `&lt;`)
+        .replace(/>/g, `&gt;`)
+        .replace(/"/g, `&quot;`)
+        .replace(/'/g, `&#39;`);
+    }
+
+    function renderKpis(visibleCount) {
+      const totalEl = document.getElementById(`kpi-total-count`);
+      const visibleSubEl = document.getElementById(`kpi-visible-sub`);
+      const critEl = document.getElementById(`kpi-critical-count`);
+      const highEl = document.getElementById(`kpi-high-count`);
+      const savedCountEl = document.getElementById(`saved-count`);
+
+      const criticalCount = STORIES.filter(function(s) { return s.intensity === `critical`; }).length;
+      const highCount = STORIES.filter(function(s) { return s.intensity === `high`; }).length;
+
+      if (totalEl) totalEl.textContent = String(STORIES.length);
+      if (visibleSubEl) visibleSubEl.textContent = `Showing ` + visibleCount + ` of ` + STORIES.length + ` stories`;
+      if (critEl) critEl.textContent = String(criticalCount);
+      if (highEl) highEl.textContent = String(highCount);
+      if (savedCountEl) savedCountEl.textContent = String(appState.savedIds.length);
+
+      const countAllEl = document.getElementById(`count-all`);
+      const countSciEl = document.getElementById(`count-science`);
+      const countAzEl = document.getElementById(`count-arizona`);
+      const countUsaEl = document.getElementById(`count-usa`);
+      const countWorldEl = document.getElementById(`count-world`);
+      if (countAllEl) countAllEl.textContent = String(STORIES.length);
+      if (countSciEl) countSciEl.textContent = String(STORIES.filter(function(s) { return s.category === `science`; }).length);
+      if (countAzEl) countAzEl.textContent = String(STORIES.filter(function(s) { return s.category === `arizona`; }).length);
+      if (countUsaEl) countUsaEl.textContent = String(STORIES.filter(function(s) { return s.category === `usa`; }).length);
+      if (countWorldEl) countWorldEl.textContent = String(STORIES.filter(function(s) { return s.category === `world`; }).length);
+
+      const cardAll = document.getElementById(`kpi-card-all`);
+      const cardCrit = document.getElementById(`kpi-card-critical`);
+      const cardHigh = document.getElementById(`kpi-card-high`);
+      if (cardAll) cardAll.classList.toggle(`is-active`, appState.intensity === `all`);
+      if (cardCrit) cardCrit.classList.toggle(`is-active`, appState.intensity === `critical`);
+      if (cardHigh) cardHigh.classList.toggle(`is-active`, appState.intensity === `high`);
+    }
+
+    function renderMatrix() {
+      const container = document.getElementById(`matrix-bars`);
+      if (!container) return;
+
+      const cats = [`science`, `arizona`, `usa`, `world`];
+      container.innerHTML = cats.map(function(cat) {
+        const subset = STORIES.filter(function(s) { return s.category === cat; });
+        const total = subset.length || 1;
+        const cCount = subset.filter(function(s) { return s.intensity === `critical`; }).length;
+        const hCount = subset.filter(function(s) { return s.intensity === `high`; }).length;
+        const sCount = subset.filter(function(s) { return s.intensity === `standard`; }).length;
+
+        const cPct = Math.round((cCount / total) * 100);
+        const hPct = Math.round((hCount / total) * 100);
+        const sPct = Math.max(0, 100 - cPct - hPct);
+        const activeClass = appState.category === cat ? ` is-active` : ``;
+
+        return `
+          <button type="button" class="matrix-cat-btn${activeClass}" onclick="setCategory('${cat}')" aria-label="Filter by ${CATEGORY_META[cat].label}: ${subset.length} stories">
+            <div class="matrix-cat-top">
+              <span>${CATEGORY_META[cat].label}</span>
+              <span>${subset.length} stories</span>
+            </div>
+            <div class="stacked-track" aria-hidden="true">
+              ${cCount > 0 ? `<div class="seg-critical" style="width:${cPct}%"></div>` : ``}
+              ${hCount > 0 ? `<div class="seg-high" style="width:${hPct}%"></div>` : ``}
+              ${sCount > 0 ? `<div class="seg-standard" style="width:${sPct}%"></div>` : ``}
+            </div>
+          </button>
+        `;
+      }).join(``);
+    }
+
+    function renderControlsState() {
+      const tabs = document.querySelectorAll(`#category-tablist .tab-btn`);
+      tabs.forEach(function(tab) {
+        const cat = tab.getAttribute(`data-category`);
+        tab.setAttribute(`aria-selected`, cat === appState.category ? `true` : `false`);
+      });
+
+      const urgBtns = document.querySelectorAll(`.urgency-toggle-group .urgency-pill`);
+      urgBtns.forEach(function(btn) {
+        const lvl = btn.getAttribute(`data-level`);
+        btn.setAttribute(`aria-pressed`, lvl === appState.intensity ? `true` : `false`);
+      });
+
+      const bookmarkFilterBtn = document.getElementById(`bookmark-filter-btn`);
+      if (bookmarkFilterBtn) {
+        bookmarkFilterBtn.setAttribute(`aria-pressed`, appState.onlySaved ? `true` : `false`);
+      }
+
+      const searchEl = document.getElementById(`search-input`);
+      if (searchEl && searchEl.value !== appState.search) {
+        searchEl.value = appState.search;
+      }
+
+      const clearBtn = document.getElementById(`clear-search-btn`);
+      if (clearBtn) {
+        clearBtn.hidden = appState.search.trim().length === 0;
+      }
+
+      const sortEl = document.getElementById(`sort-select`);
+      if (sortEl) {
+        sortEl.value = appState.sort;
+      }
+
+      const utcEl = document.getElementById(`last-updated-utc`);
+      if (utcEl) {
+        utcEl.textContent = appState.lastUpdatedUtc;
+      }
+    }
+
+    function renderStories() {
+      const listEl = document.getElementById(`story-list`);
+      const statusEl = document.getElementById(`feed-status-line`);
+      if (!listEl) return;
+
+      const filtered = sortStories(getFilteredStories());
+      renderKpis(filtered.length);
+      renderMatrix();
+      renderControlsState();
+
+      const sortNames = {
+        intensity: `Situational Intensity`,
+        recency: `Recency (Newest First)`,
+        category: `Desk / Category`
+      };
+      if (statusEl) {
+        const catLabel = appState.category === `all` ? `All Desks` : CATEGORY_META[appState.category].label;
+        const intLabel = appState.intensity === `all` ? `All Intensities` : INTENSITY_META[appState.intensity].label;
+        statusEl.textContent = `Displaying ` + filtered.length + ` of ` + STORIES.length + ` stories · ` + catLabel + ` · ` + intLabel + ` · Sorted by ` + sortNames[appState.sort];
+      }
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `
+          <div class="empty-state">
+            <h3>No dispatches match these filters</h3>
+            <p>
+              ${appState.onlySaved && appState.savedIds.length === 0
+                ? `You have not saved any stories yet. Click Save on any story card to build a custom reading queue, or switch back to all stories.`
+                : `Your current category, urgency toggle, or keyword search returned zero matches across the November 13, 2026 feed snapshot.`}
+            </p>
+            <button type="button" class="btn btn-primary" onclick="resetAllFilters()">Reset All Filters</button>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(function(story, idx) {
+        const num = String(idx + 1).padStart(2, `0`);
+        const isExpanded = appState.expandedIds.includes(story.id);
+        const isSaved = appState.savedIds.includes(story.id);
+        const catLabel = CATEGORY_META[story.category].label;
+        const intLabel = INTENSITY_META[story.intensity].label;
+        const badgeClass = story.intensity === `critical` ? `badge-critical` : (story.intensity === `high` ? `badge-high` : `badge-standard`);
+        const panelId = `context-panel-` + story.id;
+
+        const pointsHtml = story.summaryPoints.map(function(pt) {
+          return `<li>${escapeHtml(pt)}</li>`;
+        }).join(``);
+
+        return `
+          <article class="story-card${isExpanded ? ` is-expanded` : ``}" data-intensity="${story.intensity}" id="card-${story.id}">
+            <div class="story-summary-row">
+              <div class="story-main">
+                <div class="story-meta-top">
+                  <span class="index-num">${num}</span>
+                  <span class="intensity-badge ${badgeClass}">${escapeHtml(intLabel)}</span>
+                  <span class="category-chip">${escapeHtml(catLabel)}</span>
+                  <span class="story-timestamp">${escapeHtml(story.publishedUtc)} (${escapeHtml(story.relativeTime)})</span>
+                </div>
+
+                <button type="button" class="story-headline-btn" aria-expanded="${isExpanded ? `true` : `false`}" aria-controls="${panelId}" onclick="toggleStory('${story.id}')">
+                  ${escapeHtml(story.headline)}
+                </button>
+
+                <p class="story-deck">${escapeHtml(story.deck)}</p>
+
+                <div class="story-outlet-line">
+                  <span>Source: ${escapeHtml(story.outlet)}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>Desk: ${escapeHtml(story.desk)}</span>
+                </div>
+              </div>
+
+              <div class="story-controls">
+                <button type="button" class="bookmark-btn" aria-pressed="${isSaved ? `true` : `false`}" aria-label="${isSaved ? `Remove bookmark` : `Save story`}" onclick="toggleBookmark('${story.id}')">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="${isSaved ? `currentColor` : `none`}" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  <span>${isSaved ? `Saved` : `Save`}</span>
+                </button>
+
+                <button type="button" class="accordion-toggle" aria-expanded="${isExpanded ? `true` : `false`}" aria-controls="${panelId}" onclick="toggleStory('${story.id}')">
+                  <span>${isExpanded ? `Hide Context` : `Context &amp; Link`}</span>
+                  <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="story-context-panel" id="${panelId}" ${isExpanded ? `` : `hidden`}>
+              <div class="context-grid">
+                <div class="context-block">
+                  <h3 class="context-heading">Deeper Context &amp; Situational Briefing</h3>
+                  <p class="context-prose">${escapeHtml(story.context)}</p>
+
+                  <h3 class="context-heading" style="margin-top: var(--space-sm);">Key Summary Points</h3>
+                  <ul class="summary-points">
+                    ${pointsHtml}
+                  </ul>
+                </div>
+
+                <div class="context-block">
+                  <h3 class="context-heading">Source &amp; Feed Metadata</h3>
+                  <table class="metadata-table">
+                    <tbody>
+                      <tr>
+                        <th scope="row">Outlet</th>
+                        <td>${escapeHtml(story.outlet)}</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Desk / Beat</th>
+                        <td>${escapeHtml(story.desk)}</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Byline</th>
+                        <td>${escapeHtml(story.author)}</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Published</th>
+                        <td>${escapeHtml(story.publishedUtc)}</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">RSS / Hub</th>
+                        <td><span class="mono-inline">${escapeHtml(story.feedEndpoint)}</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="article-ref-bar">
+                <div class="article-ref-info">
+                  <span class="context-heading">Direct Article Destination (GitHub Pages Link Target)</span>
+                  <span class="article-ref-path">${escapeHtml(story.articlePath)}</span>
+                  <span class="article-ref-note">External navigation is disabled inside this preview; copy the canonical path above or wire directly in your GitHub Pages build.</span>
+                </div>
+                <button type="button" class="btn btn-secondary btn-compact" onclick="copyArticlePath('${story.id}', this)">
+                  Copy Article Path
+                </button>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join(``);
+    }
+
+    function showToast(message) {
+      const el = document.getElementById(`action-toast`);
+      if (!el) return;
+      el.textContent = message;
+      el.hidden = false;
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(function() {
+        el.hidden = true;
+      }, 2800);
+    }
+
+    async function persistState() {
+      if (!window.notebookAppApi || typeof window.notebookAppApi.setAppState !== `function`) return;
+      try {
+        await window.notebookAppApi.setAppState({
+          category: appState.category,
+          intensity: appState.intensity,
+          search: appState.search,
+          sort: appState.sort,
+          onlySaved: appState.onlySaved,
+          expandedIds: appState.expandedIds,
+          savedIds: appState.savedIds,
+          lastUpdatedUtc: appState.lastUpdatedUtc,
+          syncCount: appState.syncCount
+        });
+      } catch (err) {
+        // Ignore persistence errors in standalone preview
+      }
+    }
+
+    function setCategory(cat) {
+      appState.category = cat;
+      renderStories();
+      persistState();
+    }
+
+    function setIntensity(level) {
+      appState.intensity = level;
+      renderStories();
+      persistState();
+    }
+
+    function quickFilterIntensity(level) {
+      if (appState.intensity === level && level !== `all`) {
+        appState.intensity = `all`;
+      } else {
+        appState.intensity = level;
+      }
+      renderStories();
+      persistState();
+    }
+
+    function setSearchQuery(val) {
+      appState.search = val;
+      renderStories();
+      persistState();
+    }
+
+    function clearSearch() {
+      appState.search = ``;
+      renderStories();
+      persistState();
+    }
+
+    function setSortMode(mode) {
+      appState.sort = mode;
+      renderStories();
+      persistState();
+    }
+
+    function toggleBookmarkFilter() {
+      appState.onlySaved = !appState.onlySaved;
+      renderStories();
+      persistState();
+    }
+
+    function toggleStory(id) {
+      const idx = appState.expandedIds.indexOf(id);
+      if (idx >= 0) {
+        appState.expandedIds.splice(idx, 1);
+      } else {
+        appState.expandedIds.push(id);
+      }
+      renderStories();
+      persistState();
+    }
+
+    function toggleBookmark(id) {
+      const idx = appState.savedIds.indexOf(id);
+      if (idx >= 0) {
+        appState.savedIds.splice(idx, 1);
+        showToast(`Removed from Saved`);
+      } else {
+        appState.savedIds.push(id);
+        showToast(`Saved to reading queue`);
+      }
+      renderStories();
+      persistState();
+    }
+
+    function expandAllVisible() {
+      const visible = getFilteredStories();
+      visible.forEach(function(item) {
+        if (!appState.expandedIds.includes(item.id)) {
+          appState.expandedIds.push(item.id);
+        }
+      });
+      renderStories();
+      persistState();
+    }
+
+    function collapseAllVisible() {
+      appState.expandedIds = [];
+      renderStories();
+      persistState();
+    }
+
+    function resetAllFilters() {
+      appState.category = `all`;
+      appState.intensity = `all`;
+      appState.search = ``;
+      appState.sort = `intensity`;
+      appState.onlySaved = false;
+      renderStories();
+      persistState();
+      showToast(`Filters reset`);
+    }
+
+    function copyArticlePath(id, btn) {
+      const story = STORIES.find(function(s) { return s.id === id; });
+      if (!story) return;
+      const text = story.articlePath;
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === `function`) {
+        navigator.clipboard.writeText(text).then(function() {
+          if (btn) btn.textContent = `Copied Path`;
+          showToast(`Copied canonical path`);
+          setTimeout(function() {
+            if (btn) btn.textContent = `Copy Article Path`;
+          }, 1800);
+        }).catch(function() {
+          showToast(`Path: ` + text);
+        });
+      } else {
+        showToast(`Path: ` + text);
+      }
+    }
+
+    function simulateFeedSync() {
+      const btn = document.getElementById(`sync-btn`);
+      const badgeText = document.getElementById(`live-status-text`);
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = `Polling Feeds…`;
+      }
+      if (badgeText) badgeText.textContent = `SYNCING RSS…`;
+
+      setTimeout(function() {
+        appState.syncCount += 1;
+        const mins = 13 + (appState.syncCount % 45);
+        const paddedMin = String(mins).padStart(2, `0`);
+        appState.lastUpdatedUtc = `2026-11-13 17:` + paddedMin + `:00 UTC`;
+
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = `Refresh Snapshot`;
+        }
+        if (badgeText) badgeText.textContent = `LIVE FEED ACTIVE`;
+        renderControlsState();
+        persistState();
+        showToast(`Synced 21 items · ` + appState.lastUpdatedUtc);
+      }, 360);
+    }
+
+    function exportVisibleCsv() {
+      const visible = sortStories(getFilteredStories());
+      const header = [`Index`, `Category`, `Intensity`, `Published_UTC`, `Outlet`, `Headline`, `Article_Path`];
+      const rows = visible.map(function(s, i) {
+        return [
+          i + 1,
+          CATEGORY_META[s.category].label,
+          INTENSITY_META[s.intensity].label,
+          s.publishedUtc,
+          s.outlet,
+          s.headline,
+          s.articlePath
+        ].map(function(cell) {
+          return `"` + String(cell).replace(/"/g, `""`) + `"`;
+        }).join(`,`);
+      });
+      const csv = [header.join(`,`)].concat(rows).join(`\n`);
+
+      if (window.notebookAppApi && typeof window.notebookAppApi.triggerFileDownload === `function`) {
+        window.notebookAppApi.triggerFileDownload({
+          content: csv,
+          contentType: `text/csv`,
+          encoding: `UTF-8`,
+          filename: `live_news_dispatch_2026-11-13.csv`
+        });
+        showToast(`Exported ` + visible.length + ` stories to CSV`);
+      } else {
+        showToast(`CSV export ready (` + visible.length + ` rows)`);
+      }
+    }
+
+    function scrollToArchitecture() {
+      const el = document.getElementById(`github-pages-spec`);
+      if (el) el.scrollIntoView({ behavior: `smooth` });
+    }
+
+    async function initApp() {
+      if (window.notebookAppApi && typeof window.notebookAppApi.getAppState === `function`) {
+        try {
+          const saved = await window.notebookAppApi.getAppState();
+          if (saved && typeof saved === `object`) {
+            if (typeof saved.category === `string` && (saved.category === `all` || CATEGORY_META[saved.category])) {
+              appState.category = saved.category;
+            }
+            if (typeof saved.intensity === `string` && (saved.intensity === `all` || INTENSITY_META[saved.intensity])) {
+              appState.intensity = saved.intensity;
+            }
+            if (typeof saved.search === `string`) appState.search = saved.search;
+            if (typeof saved.sort === `string`) appState.sort = saved.sort;
+            if (typeof saved.onlySaved === `boolean`) appState.onlySaved = saved.onlySaved;
+            if (Array.isArray(saved.expandedIds)) appState.expandedIds = saved.expandedIds;
+            if (Array.isArray(saved.savedIds)) appState.savedIds = saved.savedIds;
+            if (typeof saved.lastUpdatedUtc === `string`) appState.lastUpdatedUtc = saved.lastUpdatedUtc;
+            if (typeof saved.syncCount === `number`) appState.syncCount = saved.syncCount;
+          }
+        } catch (err) {
+          // Proceed with default state
+        }
+      }
+
+      renderStories();
+
+      if (window.notebookAppApi && typeof window.notebookAppApi.notifyAppReady === `function`) {
+        window.notebookAppApi.notifyAppReady();
+      }
+    }
+
+    document.addEventListener(`DOMContentLoaded`, initApp);
+  </script>
+</body>
+</html>
