@@ -5,80 +5,85 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="artifact-type" content="dashboard">
   <meta name="design-style" content="briefing">
-  <title>Global &amp; Regional Dispatch — Live News Dashboard</title>
+  <title>Global &amp; Regional Live News Intelligence Dashboard — 2026</title>
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
   <style>
     :root {
       color-scheme: light;
 
-      /* Page and surfaces: warm stone-white paper */
+      /* 1. Briefing style tokens */
       --background: #faf9f5;
       --surface-container-low: #ffffff;
       --surface-container: #f1efe8;
       --surface-container-high: #e6e2d6;
 
-      /* Ink */
       --on-surface: #17181a;
       --on-surface-variant: #56585c;
 
-      /* Rules */
       --outline: #17181a;
       --outline-variant: #dedad0;
-      --input-border: #c8c4b8;
 
-      /* Accents */
       --primary: #17181a;
       --on-primary: #faf9f5;
       --primary-container: #f2b705;
       --on-primary-container: #17181a;
       --secondary: #1f4e5f;
-      --on-secondary: #ffffff;
-      --secondary-soft: #e8f1f4;
-      --on-secondary-soft: #183d4a;
       --tertiary: #785008;
-      --tertiary-soft: #f5e6c4;
       --error: #b42318;
       --on-error: #ffffff;
 
-      /* Semantic & intensity tokens */
-      --positive: #2b6e52;
-      --positive-soft: #e6f2ec;
-      --on-positive-soft: #1d4d38;
-      --warning: #9a5b00;
-      --warning-soft: #fef3d6;
-      --on-warning-soft: #6b3f00;
-      --critical-soft: #fdecea;
-      --on-critical-soft: #8f1d14;
-      --focus: #1f4e5f;
-
-      /* Data series */
       --data-1: #1f4e5f;
       --data-2: #d99000;
       --data-3: #2b6e52;
       --data-4: #b84a39;
       --data-context: #c4bfb2;
 
-      /* Fonts */
       --font-headline: 'Source Serif 4', serif;
       --font-body: 'Plus Jakarta Sans', sans-serif;
       --font-label: 'Geist Mono', monospace;
 
-      /* Shape */
       --rounded: 0.25rem;
       --rounded-lg: 0.375rem;
       --rounded-full: 0.25rem;
-      --badge-radius: 2px;
 
-      /* Style effects */
       --section-rule: 1.5px solid var(--outline);
       --card-border: 1px solid var(--outline-variant);
-      --shadow-hover: 0 2px 6px rgba(23, 24, 26, 0.06);
-      --shadow-expanded: 0 4px 14px rgba(23, 24, 26, 0.06);
+      --badge-radius: 2px;
       --heading-tracking: -0.02em;
       --label-tracking: 0.08em;
 
-      /* Type scale (Dashboard) */
-      --display-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem);
+      /* 2. Semantic & intensity tokens harmonized with Briefing */
+      --positive: #2b6e52;
+      --positive-bg: #e7f3ed;
+      --warning: #8f4f00;
+      --warning-bg: #fdf1dc;
+      --critical: #b42318;
+      --critical-bg: #fdeceb;
+      --standard-bg: #e8f1f4;
+      --tag-bg: #f5e6c4;
+      --focus: #1f4e5f;
+      --border-subtle: #c8c4b8;
+      --live-pulse: #2b6e52;
+
+      /* Editorial gallery SVG surface tokens */
+      --plate-desert-sky: #e9c99b;
+      --plate-desert-sun: #f2b705;
+      --plate-desert-ridge: #8a4b2a;
+      --plate-desert-dusk: #3b2820;
+      --plate-coast-sky: #d5e4e8;
+      --plate-coast-water: #1f4e5f;
+      --plate-coast-foam: #faf9f5;
+      --plate-studio-backdrop: #eae5da;
+      --plate-studio-light: #fffdf8;
+      --plate-studio-frame: #17181a;
+      --plate-farm-meadow: #2b6e52;
+      --plate-farm-sage: #a7c4b5;
+      --plate-farm-earth: #785008;
+
+      /* 3. Type scale (Dashboard / Data Explorer) */
+      --display-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.35rem);
       --headline-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
       --subhead-size: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
       --body-size: clamp(0.9375rem, 0.9rem + 0.15vw, 1rem);
@@ -91,7 +96,6 @@
       --space-lg: 1.5rem;
       --space-xl: 2.5rem;
       --space-2xl: 4rem;
-      --space-3xl: 6rem;
 
       /* Motion */
       --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -101,6 +105,7 @@
       --dur-long: 420ms;
     }
 
+    /* Base reset */
     *, *::before, *::after { box-sizing: border-box; }
     html, body {
       overflow-x: clip;
@@ -115,43 +120,40 @@
     }
     header { position: static !important; }
 
-    button, input, select, textarea {
-      font-family: inherit;
-    }
-
-    :focus-visible {
-      outline: 3px solid var(--focus);
-      outline-offset: 2px;
-    }
-
     .page-grid {
       display: grid;
       grid-template-columns: minmax(0, 1fr);
-      gap: var(--space-lg);
+      gap: var(--space-xl);
       padding: var(--space-lg);
-      max-width: 1200px;
+      max-width: 1240px;
       margin: 0 auto;
       overflow: hidden;
     }
     .page-grid * { min-width: 0; }
 
-    /* Dossier Header & Live Status Bar */
-    .dossier-header {
-      display: grid;
-      gap: var(--space-md);
+    /* Focus rings */
+    :focus-visible {
+      outline: 2.5px solid var(--focus);
+      outline-offset: 2px;
     }
 
+    button, input, select {
+      font-family: inherit;
+    }
+
+    /* Dossier Header & Masthead */
     .dossier-bar {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: var(--space-sm) var(--space-md);
+      gap: var(--space-sm);
       border-bottom: var(--section-rule);
       padding-bottom: var(--space-sm);
+      margin-bottom: var(--space-md);
     }
 
-    .dossier-bar-left {
+    .dossier-left {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
@@ -166,37 +168,11 @@
       font-size: 0.6875rem;
       letter-spacing: var(--label-tracking);
       text-transform: uppercase;
-      padding: var(--space-xs) var(--space-sm);
+      padding: 0.2rem 0.55rem;
       border-radius: var(--badge-radius);
-    }
-
-    .live-badge {
       display: inline-flex;
       align-items: center;
-      gap: 0.375rem;
-      background: var(--positive-soft);
-      color: var(--on-positive-soft);
-      font-family: var(--font-label);
-      font-weight: 600;
-      font-size: var(--label-size);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: var(--space-xs) var(--space-sm);
-      border-radius: var(--badge-radius);
-      border: 1px solid var(--positive);
-    }
-
-    .live-dot {
-      width: 0.5rem;
-      height: 0.5rem;
-      border-radius: 50%;
-      background-color: var(--positive);
-      animation: pulse-live 1.8s var(--ease-in-out) infinite;
-    }
-
-    @keyframes pulse-live {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.45; transform: scale(0.85); }
+      gap: var(--space-xs);
     }
 
     .dossier-meta {
@@ -207,38 +183,51 @@
       letter-spacing: 0.05em;
     }
 
-    .status-bar-right {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: var(--space-sm);
-    }
-
-    .utc-readout {
+    /* Live indicator badge */
+    .live-badge {
       display: inline-flex;
       align-items: center;
-      gap: var(--space-xs);
+      gap: var(--space-sm);
+      background: var(--positive-bg);
+      color: var(--positive);
+      border: 1px solid var(--positive);
+      border-radius: var(--badge-radius);
+      padding: 0.2rem 0.6rem;
       font-family: var(--font-label);
       font-size: var(--label-size);
-      font-weight: 500;
-      color: var(--on-surface);
-      background: var(--surface-container);
-      padding: var(--space-xs) var(--space-sm);
-      border-radius: var(--rounded);
-      border: var(--card-border);
-      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
     }
 
-    .title-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: var(--space-md);
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--live-pulse);
+      position: relative;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .pulse-dot::after {
+      content: "";
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      border: 1.5px solid var(--live-pulse);
+      animation: livePulse 1.8s var(--ease-out) infinite;
+    }
+    @keyframes livePulse {
+      0% { transform: scale(0.8); opacity: 0.9; }
+      75% { transform: scale(1.9); opacity: 0; }
+      100% { transform: scale(1.9); opacity: 0; }
     }
 
-    .title-block {
-      max-width: 68ch;
+    .header-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+      gap: var(--space-lg);
+      align-items: end;
     }
 
     .title {
@@ -247,8 +236,8 @@
       font-weight: 600;
       letter-spacing: var(--heading-tracking);
       line-height: 1.08;
-      color: var(--on-surface);
       margin: 0;
+      color: var(--on-surface);
     }
 
     .standfirst {
@@ -256,15 +245,50 @@
       font-size: var(--subhead-size);
       font-weight: 600;
       color: var(--secondary);
-      margin: var(--space-xs) 0 0 0;
-      line-height: 1.4;
+      margin: var(--space-sm) 0 0 0;
+      max-width: 64ch;
+      line-height: 1.45;
     }
 
-    .header-actions {
+    .timestamp-callout {
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-top: var(--section-rule);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md);
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .timestamp-label {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      text-transform: uppercase;
+      letter-spacing: var(--label-tracking);
+      color: var(--on-surface-variant);
+      display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: var(--space-sm);
+    }
+
+    .timestamp-value {
+      font-family: var(--font-label);
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--on-surface);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
+    }
+
+    .timestamp-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      margin-top: var(--space-xs);
+      flex-wrap: wrap;
     }
 
     /* Buttons */
@@ -281,48 +305,36 @@
       cursor: pointer;
       transition: background-color var(--dur-micro) var(--ease-out),
                   color var(--dur-micro) var(--ease-out),
-                  transform var(--dur-micro) var(--ease-out);
-      white-space: nowrap;
+                  box-shadow var(--dur-micro) var(--ease-out);
+      border: 1px solid transparent;
+      text-decoration: none;
     }
-
+    .btn-sm {
+      min-height: 36px;
+      padding: 0 var(--space-sm);
+      font-size: 0.8125rem;
+    }
     .btn-primary {
       background: var(--primary);
       color: var(--on-primary);
-      border: 1px solid var(--primary);
     }
     .btn-primary:hover {
       background: var(--secondary);
-      border-color: var(--secondary);
     }
-
     .btn-secondary {
       background: var(--surface-container-low);
       color: var(--on-surface);
-      border: 1px solid var(--input-border);
+      border-color: var(--border-subtle);
     }
     .btn-secondary:hover {
       background: var(--surface-container);
     }
-
-    .btn-compact {
-      min-height: 44px;
-      padding: 0 var(--space-sm);
-      font-size: var(--label-size);
-      font-family: var(--font-label);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .btn:active {
-      transform: translateY(1px);
-    }
-
     .btn:disabled {
       opacity: 0.55;
       cursor: not-allowed;
     }
 
-    /* Metric Summary Cards */
+    /* Top KPI Figure Cards */
     .kpi-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -336,202 +348,159 @@
       padding: var(--space-md) var(--space-lg);
       display: flex;
       flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .figure-card-head {
+      display: flex;
+      align-items: center;
       justify-content: space-between;
       gap: var(--space-xs);
     }
 
-    .figure-card-interactive {
-      cursor: pointer;
-      text-align: left;
-      transition: background-color var(--dur-micro) var(--ease-out),
-                  box-shadow var(--dur-micro) var(--ease-out);
-    }
-    .figure-card-interactive:hover {
+    .index-num {
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: var(--label-size);
+      color: var(--secondary);
       background: var(--surface-container);
-      box-shadow: var(--shadow-hover);
-    }
-    .figure-card-interactive.is-active {
-      box-shadow: inset 0 0 0 2px var(--secondary);
-      background: var(--secondary-soft);
+      padding: 0.1rem 0.35rem;
+      border-radius: var(--badge-radius);
     }
 
-    .kpi-label {
+    .figure-label {
       font-family: var(--font-label);
       font-size: var(--label-size);
-      font-weight: 500;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       color: var(--on-surface-variant);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--space-xs);
     }
 
-    .kpi-value {
+    .figure-value {
       font-family: var(--font-headline);
-      font-size: clamp(1.65rem, 1.3rem + 1vw, 2.15rem);
+      font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
       font-weight: 600;
-      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.15;
       color: var(--on-surface);
-      font-variant-numeric: lining-nums tabular-nums;
+      margin-top: var(--space-xs);
     }
 
-    .kpi-value.kpi-critical { color: var(--error); }
-    .kpi-value.kpi-high { color: var(--tertiary); }
-    .kpi-value.kpi-feeds { color: var(--secondary); }
-
-    .kpi-sub {
+    .figure-sub {
       font-size: 0.8125rem;
       color: var(--on-surface-variant);
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      flex-wrap: wrap;
     }
 
-    /* Situational Breakdown Matrix Strip */
-    .matrix-panel {
-      background: var(--surface-container-low);
-      border: var(--card-border);
-      border-radius: var(--rounded-lg);
-      padding: var(--space-md) var(--space-lg);
+    /* Analytics & Context Two-Panel Strip */
+    .analytics-grid {
       display: grid;
-      gap: var(--space-sm);
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+      gap: var(--space-lg);
+      align-items: stretch;
     }
 
-    .matrix-header {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--space-sm);
-    }
-
-    .matrix-title {
+    .panel-title {
       font-family: var(--font-headline);
-      font-size: 1.0625rem;
+      font-size: var(--headline-size);
       font-weight: 600;
+      letter-spacing: var(--heading-tracking);
       margin: 0;
+      color: var(--on-surface);
     }
 
-    .matrix-legend {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: var(--space-md);
+    .panel-subtitle {
       font-family: var(--font-label);
       font-size: var(--label-size);
       color: var(--on-surface-variant);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: var(--space-xs) 0 var(--space-md) 0;
     }
 
-    .legend-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.375rem;
+    .chart-wrap {
+      position: relative;
+      min-height: 240px;
+      width: 100%;
     }
 
-    .legend-swatch {
-      width: 0.625rem;
-      height: 0.625rem;
-      border-radius: var(--badge-radius);
-      display: inline-block;
+    .macro-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
     }
-    .swatch-critical { background-color: var(--data-4); }
-    .swatch-high { background-color: var(--data-2); }
-    .swatch-standard { background-color: var(--data-1); }
-
-    .matrix-bars {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: var(--space-md);
-    }
-
-    .matrix-cat-btn {
-      background: var(--background);
-      border: var(--card-border);
-      border-radius: var(--rounded);
-      padding: var(--space-sm) var(--space-md);
-      text-align: left;
-      cursor: pointer;
-      min-height: 44px;
-      display: grid;
-      gap: var(--space-xs);
-      transition: background-color var(--dur-micro) var(--ease-out);
-    }
-    .matrix-cat-btn:hover {
-      background: var(--surface-container);
-    }
-    .matrix-cat-btn.is-active {
-      background: var(--surface-container);
-      box-shadow: inset 0 0 0 1.5px var(--outline);
-    }
-
-    .matrix-cat-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: var(--space-xs);
+    .macro-table th {
       font-family: var(--font-label);
       font-size: var(--label-size);
       text-transform: uppercase;
-      color: var(--on-surface);
+      letter-spacing: 0.05em;
+      color: var(--on-surface-variant);
+      text-align: left;
+      padding: var(--space-sm) var(--space-xs);
+      border-bottom: var(--section-rule);
+    }
+    .macro-table td {
+      padding: var(--space-sm) var(--space-xs);
+      border-bottom: var(--card-border);
+      vertical-align: top;
+    }
+    .macro-table td.num, .macro-table th.num {
+      text-align: right;
+      font-family: var(--font-label);
+      font-variant-numeric: tabular-nums;
       font-weight: 600;
+      white-space: nowrap;
     }
 
-    .stacked-track {
-      display: flex;
-      width: 100%;
-      height: 8px;
-      background: var(--surface-container-high);
-      border-radius: var(--badge-radius);
-      overflow: hidden;
-      gap: 1px;
-    }
-
-    .seg-critical { background-color: var(--data-4); }
-    .seg-high { background-color: var(--data-2); }
-    .seg-standard { background-color: var(--data-1); }
-
-    /* Controls Bar: Tabs, Intensity Toggles, Search & Sort */
-    .controls-section {
-      display: grid;
-      gap: var(--space-md);
+    /* Controls & Filtering Bar */
+    .controls-panel {
+      background: var(--surface-container);
       border-top: var(--section-rule);
-      padding-top: var(--space-md);
+      border-bottom: var(--card-border);
+      padding: var(--space-lg);
+      border-radius: var(--rounded-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
     }
 
-    .tabs-row {
+    .filter-row {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: var(--space-sm);
+      gap: var(--space-md);
     }
 
     .tab-group {
       display: flex;
       flex-wrap: wrap;
-      align-items: center;
       gap: var(--space-sm);
     }
 
     .tab-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-xs);
       min-height: 44px;
       padding: 0 var(--space-md);
-      border-radius: var(--rounded);
-      border: 1px solid var(--outline-variant);
       background: var(--surface-container-low);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--rounded);
       color: var(--on-surface);
-      font-size: 0.875rem;
       font-weight: 600;
+      font-size: 0.875rem;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
       transition: background-color var(--dur-micro) var(--ease-out),
                   color var(--dur-micro) var(--ease-out);
     }
     .tab-btn:hover {
-      background: var(--surface-container);
+      background: var(--surface-container-high);
     }
-    .tab-btn[aria-selected="true"] {
+    .tab-btn[aria-pressed="true"] {
       background: var(--primary);
       color: var(--on-primary);
       border-color: var(--primary);
@@ -539,26 +508,54 @@
 
     .tab-count {
       font-family: var(--font-label);
-      font-size: 0.6875rem;
-      padding: 0.0625rem 0.375rem;
+      font-size: var(--label-size);
+      padding: 0.1rem 0.35rem;
       border-radius: var(--badge-radius);
       background: var(--surface-container);
       color: var(--on-surface-variant);
     }
-    .tab-btn[aria-selected="true"] .tab-count {
+    .tab-btn[aria-pressed="true"] .tab-count {
       background: var(--primary-container);
       color: var(--on-primary-container);
     }
 
-    .filter-toolbar {
+    .intensity-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      align-items: center;
+    }
+
+    .intensity-pill-btn {
+      min-height: 40px;
+      padding: 0 var(--space-sm);
+      background: var(--surface-container-low);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--rounded);
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--on-surface);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+    .intensity-pill-btn:hover {
+      background: var(--surface-container-high);
+    }
+    .intensity-pill-btn[aria-pressed="true"] {
+      box-shadow: inset 0 0 0 2px var(--primary);
+      background: var(--surface-container-low);
+    }
+
+    .input-controls-row {
       display: grid;
-      grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.75fr) minmax(0, 1.25fr);
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
       gap: var(--space-md);
       align-items: end;
-      background: var(--surface-container);
-      border: var(--card-border);
-      border-radius: var(--rounded-lg);
-      padding: var(--space-md);
     }
 
     .field-group {
@@ -570,575 +567,592 @@
     .field-label {
       font-family: var(--font-label);
       font-size: var(--label-size);
-      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
       color: var(--on-surface-variant);
-    }
-
-    .search-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: var(--space-xs);
+      font-weight: 600;
     }
 
     .text-input, .select-input {
-      width: 100%;
       min-height: 44px;
-      padding: var(--space-sm) var(--space-md);
+      padding: 0 var(--space-md);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--rounded);
       background: var(--surface-container-low);
       color: var(--on-surface);
-      border: 1px solid var(--input-border);
-      border-radius: var(--rounded);
       font-size: 0.9375rem;
-      transition: background-color var(--dur-micro) var(--ease-out);
+      width: 100%;
     }
-
     .select-input {
-      padding-right: 2.25rem;
-      cursor: pointer;
+      padding-right: var(--space-xl);
     }
 
-    .urgency-toggle-group {
+    .row-actions {
       display: flex;
       flex-wrap: wrap;
       gap: var(--space-sm);
+      align-items: center;
     }
 
-    .urgency-pill {
+    /* Situational Badges */
+    .badge {
       display: inline-flex;
       align-items: center;
-      gap: 0.375rem;
-      min-height: 44px;
-      padding: 0 var(--space-sm);
-      border-radius: var(--rounded);
-      border: 1px solid var(--input-border);
-      background: var(--surface-container-low);
-      color: var(--on-surface);
-      font-size: 0.8125rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color var(--dur-micro) var(--ease-out),
-                  box-shadow var(--dur-micro) var(--ease-out);
-    }
-    .urgency-pill:hover {
-      background: var(--surface-container-high);
-    }
-    .urgency-pill[aria-pressed="true"] {
-      background: var(--primary);
-      color: var(--on-primary);
-      border-color: var(--primary);
-    }
-    .urgency-pill[data-level="critical"][aria-pressed="true"] {
-      background: var(--error);
-      color: var(--on-error);
-      border-color: var(--error);
-    }
-    .urgency-pill[data-level="high"][aria-pressed="true"] {
-      background: var(--primary-container);
-      color: var(--on-primary-container);
-      border-color: var(--primary-container);
-    }
-    .urgency-pill[data-level="standard"][aria-pressed="true"] {
-      background: var(--secondary);
-      color: var(--on-secondary);
-      border-color: var(--secondary);
-    }
-
-    /* Feed Status & Bulk Controls */
-    .feed-meta-bar {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--space-sm);
-    }
-
-    .feed-count-summary {
+      gap: var(--space-xs);
       font-family: var(--font-label);
       font-size: var(--label-size);
-      color: var(--on-surface-variant);
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.05em;
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--badge-radius);
+      white-space: nowrap;
     }
 
-    .bulk-actions {
+    .badge-critical {
+      background: var(--critical-bg);
+      color: var(--critical);
+      border: 1px solid var(--critical);
+    }
+    .badge-high {
+      background: var(--warning-bg);
+      color: var(--warning);
+      border: 1px solid var(--warning);
+    }
+    .badge-standard {
+      background: var(--standard-bg);
+      color: var(--secondary);
+      border: 1px solid var(--secondary);
+    }
+    .badge-category {
+      background: var(--tag-bg);
+      color: var(--tertiary);
+    }
+    .badge-score {
+      background: var(--surface-container);
+      color: var(--on-surface);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Expandable News Cards */
+    .news-feed-header {
       display: flex;
       flex-wrap: wrap;
-      align-items: center;
+      align-items: baseline;
+      justify-content: space-between;
       gap: var(--space-sm);
+      margin-bottom: var(--space-md);
     }
 
-    /* Story Cards (Accordion Dropdown Format) */
-    .story-list {
+    .az-desk-notice {
+      background: var(--surface-container);
+      border-left: 3px solid var(--secondary);
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--rounded);
+      font-size: 0.875rem;
+      color: var(--on-surface);
+      margin-bottom: var(--space-md);
+      display: none;
+    }
+    .az-desk-notice.visible {
+      display: block;
+    }
+
+    .news-grid {
       display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: var(--space-md);
     }
 
-    .story-card {
+    .news-card {
       background: var(--surface-container-low);
       border: var(--card-border);
       border-radius: var(--rounded-lg);
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
       transition: box-shadow var(--dur-short) var(--ease-out);
     }
-
-    .story-card[data-intensity="critical"] {
-      border-left: 4px solid var(--error);
+    .news-card.intensity-critical {
+      border-left: 4px solid var(--critical);
     }
-    .story-card[data-intensity="high"] {
-      border-left: 4px solid var(--primary-container);
+    .news-card.intensity-high {
+      border-left: 4px solid var(--warning);
     }
-    .story-card[data-intensity="standard"] {
+    .news-card.intensity-standard {
       border-left: 4px solid var(--secondary);
     }
 
-    .story-card.is-expanded {
-      box-shadow: var(--shadow-expanded);
+    .news-card-trigger {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 0;
+      padding: var(--space-lg);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      color: inherit;
+    }
+    .news-card-trigger:hover {
+      background: var(--surface-container);
     }
 
-    .story-summary-row {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: var(--space-md);
-      padding: var(--space-md) var(--space-lg);
-      align-items: start;
-    }
-
-    .story-main {
-      display: grid;
-      gap: var(--space-xs);
-    }
-
-    .story-meta-top {
+    .news-meta-top {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: var(--space-sm);
+      justify-content: space-between;
+      gap: var(--space-xs);
+      width: 100%;
     }
 
-    .index-num {
-      font-family: var(--font-label);
-      font-weight: 600;
-      font-size: var(--label-size);
-      color: var(--secondary);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .intensity-badge {
-      display: inline-flex;
+    .news-badges-left {
+      display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 0.3rem;
-      font-family: var(--font-label);
-      font-size: 0.6875rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      padding: 0.1875rem var(--space-sm);
-      border-radius: var(--badge-radius);
+      gap: var(--space-xs);
     }
 
-    .badge-critical {
-      background: var(--critical-soft);
-      color: var(--on-critical-soft);
-    }
-    .badge-high {
-      background: var(--warning-soft);
-      color: var(--on-warning-soft);
-    }
-    .badge-standard {
-      background: var(--secondary-soft);
-      color: var(--on-secondary-soft);
-    }
-
-    .category-chip {
-      font-family: var(--font-label);
-      font-size: 0.6875rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--tertiary);
-      background: var(--tertiary-soft);
-      padding: 0.1875rem var(--space-sm);
-      border-radius: var(--badge-radius);
-    }
-
-    .story-timestamp {
+    .news-time {
       font-family: var(--font-label);
       font-size: var(--label-size);
       color: var(--on-surface-variant);
       font-variant-numeric: tabular-nums;
     }
 
-    .story-headline-btn {
-      background: transparent;
-      border: 0;
-      padding: 0;
-      margin: 0;
-      text-align: left;
-      cursor: pointer;
-      color: var(--on-surface);
+    .news-headline {
       font-family: var(--font-headline);
-      font-size: var(--headline-size);
+      font-size: 1.1875rem;
       font-weight: 600;
-      line-height: 1.18;
+      line-height: 1.25;
       letter-spacing: -0.015em;
-    }
-    .story-headline-btn:hover {
-      color: var(--secondary);
+      margin: 0;
+      color: var(--on-surface);
     }
 
-    .story-deck {
+    .news-summary {
       margin: 0;
       font-size: 0.9375rem;
       color: var(--on-surface-variant);
-      max-width: 70ch;
+      line-height: 1.5;
     }
 
-    .story-outlet-line {
+    .news-footer-bar {
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
+      justify-content: space-between;
       gap: var(--space-sm);
-      font-family: var(--font-label);
-      font-size: var(--label-size);
-      color: var(--secondary);
+      width: 100%;
+      padding-top: var(--space-xs);
+      border-top: 1px solid var(--outline-variant);
       margin-top: var(--space-xs);
     }
 
-    .story-controls {
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-    }
-
-    .bookmark-btn {
-      min-width: 44px;
-      min-height: 44px;
-      padding: 0 var(--space-sm);
-      border-radius: var(--rounded);
-      border: 1px solid var(--outline-variant);
-      background: var(--background);
-      color: var(--on-surface-variant);
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-xs);
+    .news-source-name {
       font-family: var(--font-label);
       font-size: var(--label-size);
-      transition: background-color var(--dur-micro) var(--ease-out),
-                  color var(--dur-micro) var(--ease-out);
-    }
-    .bookmark-btn:hover {
-      background: var(--surface-container);
-      color: var(--on-surface);
-    }
-    .bookmark-btn[aria-pressed="true"] {
-      background: var(--primary-container);
-      color: var(--on-primary-container);
-      border-color: var(--primary-container);
+      color: var(--secondary);
       font-weight: 600;
     }
 
-    .accordion-toggle {
+    .expand-cue {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--on-surface);
       display: inline-flex;
       align-items: center;
       gap: var(--space-xs);
-      min-height: 44px;
-      padding: 0 var(--space-md);
-      border-radius: var(--rounded);
-      border: 1px solid var(--input-border);
-      background: var(--surface-container);
-      color: var(--on-surface);
-      font-size: 0.8125rem;
       font-weight: 600;
-      cursor: pointer;
-      transition: background-color var(--dur-micro) var(--ease-out),
-                  color var(--dur-micro) var(--ease-out);
-      white-space: nowrap;
-    }
-    .accordion-toggle:hover {
-      background: var(--surface-container-high);
-    }
-    .accordion-toggle[aria-expanded="true"] {
-      background: var(--primary);
-      color: var(--on-primary);
-      border-color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
 
-    .chevron-icon {
+    .expand-chevron {
       transition: transform var(--dur-short) var(--ease-in-out);
     }
-    .accordion-toggle[aria-expanded="true"] .chevron-icon {
+    .news-card[data-expanded="true"] .expand-chevron {
       transform: rotate(180deg);
     }
 
-    /* Expandable Context Panel (Dropdown Drawer) */
-    .story-context-panel {
-      border-top: var(--card-border);
-      background: var(--background);
-      padding: var(--space-md) var(--space-lg) var(--space-lg);
-      display: grid;
-      gap: var(--space-md);
-      animation: expand-fade var(--dur-short) var(--ease-out);
-    }
-    .story-context-panel[hidden] {
+    /* Expanded Dropdown Content */
+    .news-dropdown {
       display: none;
+      padding: 0 var(--space-lg) var(--space-lg) var(--space-lg);
+      background: var(--surface-container);
+      border-top: var(--card-border);
+      flex-direction: column;
+      gap: var(--space-md);
+      animation: drawerReveal var(--dur-short) var(--ease-out);
     }
-
-    @keyframes expand-fade {
+    .news-card[data-expanded="true"] .news-dropdown {
+      display: flex;
+    }
+    @keyframes drawerReveal {
       from { opacity: 0; transform: translateY(-4px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .context-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-      gap: var(--space-lg);
-    }
-
-    .context-block {
-      display: grid;
-      gap: var(--space-xs);
-      align-content: start;
-    }
-
-    .context-heading {
+    .dropdown-section-label {
       font-family: var(--font-label);
       font-size: var(--label-size);
-      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: var(--label-tracking);
       color: var(--secondary);
-      margin: 0;
+      font-weight: 600;
+      margin: var(--space-md) 0 var(--space-xs) 0;
     }
 
-    .context-prose {
+    .dropdown-context {
       margin: 0;
       font-size: 0.9375rem;
+      line-height: 1.6;
       color: var(--on-surface);
       max-width: 65ch;
     }
 
-    .summary-points {
+    .dropdown-bullets {
       margin: 0;
-      padding-left: var(--space-md);
-      display: grid;
+      padding-left: 1.25rem;
+      display: flex;
+      flex-direction: column;
       gap: var(--space-xs);
-      font-size: 0.9375rem;
+      font-size: 0.9rem;
       color: var(--on-surface);
     }
 
-    .metadata-table {
-      width: 100%;
-      border-collapse: collapse;
+    .dropdown-source-box {
       background: var(--surface-container-low);
       border: var(--card-border);
       border-radius: var(--rounded);
-      font-size: 0.875rem;
-    }
-    .metadata-table th, .metadata-table td {
-      padding: var(--space-sm);
-      text-align: left;
-      border-bottom: 1px solid var(--outline-variant);
-      vertical-align: top;
-    }
-    .metadata-table tr:last-child th,
-    .metadata-table tr:last-child td {
-      border-bottom: 0;
-    }
-    .metadata-table th {
-      font-family: var(--font-label);
-      font-size: var(--label-size);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--on-surface-variant);
-      width: 34%;
-      font-weight: 500;
-    }
-    .metadata-table td {
-      color: var(--on-surface);
-      font-weight: 500;
-      word-break: break-word;
-    }
-
-    .article-ref-bar {
+      padding: var(--space-sm) var(--space-md);
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
       gap: var(--space-sm);
+    }
+
+    .source-ref-text {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--on-surface-variant);
+    }
+
+    .dropdown-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+    }
+
+    /* Empty State */
+    .empty-state {
+      grid-column: 1 / -1;
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-2xl) var(--space-lg);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    /* Rachel Cook Modeling Career & Photo Gallery Subsection */
+    .gallery-section {
+      padding-top: var(--space-lg);
+    }
+
+    .profile-banner {
+      background: var(--surface-container-low);
+      border: var(--card-border);
+      border-top: var(--section-rule);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-lg);
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      gap: var(--space-lg);
+      align-items: center;
+      margin-bottom: var(--space-lg);
+    }
+
+    .profile-identity {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .profile-handle-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .profile-bio {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--secondary);
+      margin: var(--space-xs) 0 0 0;
+    }
+
+    .profile-channels {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--on-surface-variant);
+    }
+
+    .profile-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-sm);
+    }
+
+    .profile-stat-tile {
       background: var(--surface-container);
       border: var(--card-border);
       border-radius: var(--rounded);
       padding: var(--space-sm) var(--space-md);
     }
-
-    .article-ref-info {
-      display: grid;
-      gap: 0.125rem;
-    }
-
-    .article-ref-path {
-      font-family: var(--font-label);
-      font-size: 0.8125rem;
-      color: var(--secondary);
+    .profile-stat-num {
+      font-family: var(--font-headline);
+      font-size: 1.35rem;
       font-weight: 600;
-      word-break: break-all;
+      font-variant-numeric: tabular-nums;
+      color: var(--on-surface);
     }
-
-    .article-ref-note {
-      font-size: 0.75rem;
+    .profile-stat-lbl {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      text-transform: uppercase;
       color: var(--on-surface-variant);
     }
 
-    /* Empty State */
-    .empty-state {
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-lg);
+    }
+
+    .gallery-card {
       background: var(--surface-container-low);
       border: var(--card-border);
       border-radius: var(--rounded-lg);
-      padding: var(--space-xl) var(--space-lg);
-      display: grid;
-      gap: var(--space-sm);
-      justify-items: start;
-    }
-    .empty-state h3 {
-      font-family: var(--font-headline);
-      font-size: var(--headline-size);
-      margin: 0;
-    }
-    .empty-state p {
-      margin: 0;
-      color: var(--on-surface-variant);
-      max-width: 55ch;
-    }
-
-    /* GitHub Pages Architecture & Source Ledger */
-    .aside-box {
-      background: var(--surface-container);
-      border-top: var(--section-rule);
-      border-radius: 0 0 var(--rounded-lg) var(--rounded-lg);
-      padding: var(--space-lg);
-      display: grid;
-      gap: var(--space-md);
-    }
-
-    .aside-header {
+      overflow: hidden;
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
+    }
+
+    .gallery-plate {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      overflow: hidden;
+      background: var(--surface-container);
+      border-bottom: var(--card-border);
+    }
+
+    .gallery-plate svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .plate-badge-overlay {
+      position: absolute;
+      top: var(--space-sm);
+      left: var(--space-sm);
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 600;
+      padding: 0.18rem 0.5rem;
+      border-radius: var(--badge-radius);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .plate-res-overlay {
+      position: absolute;
+      bottom: var(--space-sm);
+      right: var(--space-sm);
+      background: var(--primary);
+      color: var(--on-primary);
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      padding: 0.15rem 0.45rem;
+      border-radius: var(--badge-radius);
+    }
+
+    .gallery-body {
+      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      flex: 1;
+    }
+
+    .gallery-meta-row {
+      display: flex;
       align-items: center;
       justify-content: space-between;
       gap: var(--space-sm);
+      flex-wrap: wrap;
     }
 
-    .aside-title {
+    .gallery-title {
       font-family: var(--font-headline);
-      font-size: var(--headline-size);
+      font-size: 1.25rem;
       font-weight: 600;
       margin: 0;
+      color: var(--on-surface);
+      line-height: 1.2;
     }
 
-    .pipeline-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--space-md);
+    .gallery-desc {
+      margin: 0;
+      font-size: 0.9375rem;
+      color: var(--on-surface-variant);
+      line-height: 1.55;
     }
 
-    .pipeline-step {
+    .gallery-foot {
+      margin-top: auto;
+      padding-top: var(--space-sm);
+      border-top: var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
+    }
+
+    /* Lightbox Inspector Modal (on explicit user click) */
+    .lightbox-backdrop {
+      position: fixed;
+      inset: 0;
+      background: color-mix(in srgb, var(--on-surface) 78%, transparent);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-lg);
+      z-index: 50;
+    }
+    .lightbox-backdrop[aria-hidden="false"] {
+      display: flex;
+    }
+    .lightbox-dialog {
       background: var(--surface-container-low);
+      border: 1.5px solid var(--outline);
+      border-radius: var(--rounded-lg);
+      max-width: 860px;
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .lightbox-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: var(--section-rule);
+      background: var(--background);
+    }
+    .lightbox-visual {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: var(--surface-container);
+    }
+    .lightbox-visual svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .lightbox-caption {
+      padding: var(--space-md) var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    /* Footer & GitHub Pages Spec */
+    .site-footer {
+      border-top: var(--section-rule);
+      padding-top: var(--space-lg);
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: var(--space-lg);
+      font-size: 0.875rem;
+      color: var(--on-surface-variant);
+    }
+
+    .code-snippet {
+      font-family: var(--font-label);
+      font-size: 0.8125rem;
+      background: var(--surface-container);
       border: var(--card-border);
       border-radius: var(--rounded);
       padding: var(--space-md);
-      display: grid;
-      gap: var(--space-xs);
-      align-content: start;
-    }
-
-    .pipeline-step h4 {
-      font-family: var(--font-body);
-      font-size: 0.9375rem;
-      font-weight: 700;
-      margin: 0;
       color: var(--on-surface);
-    }
-    .pipeline-step p {
-      margin: 0;
-      font-size: 0.875rem;
-      color: var(--on-surface-variant);
-    }
-    .mono-inline {
-      font-family: var(--font-label);
-      font-size: 0.8125rem;
-      color: var(--secondary);
-      background: var(--surface-container);
-      padding: 0.0625rem 0.3rem;
-      border-radius: var(--badge-radius);
+      overflow-x: auto;
+      white-space: pre-wrap;
+      line-height: 1.5;
     }
 
-    .sources-footer {
-      border-top: 1px solid var(--outline-variant);
-      padding-top: var(--space-md);
-      font-size: 0.875rem;
-      color: var(--on-surface-variant);
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: var(--space-sm);
-    }
-
-    .toast-inline {
+    .status-toast {
+      position: fixed;
+      bottom: var(--space-lg);
+      right: var(--space-lg);
+      background: var(--primary);
+      color: var(--on-primary);
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--rounded);
       font-family: var(--font-label);
       font-size: var(--label-size);
-      color: var(--on-positive-soft);
-      background: var(--positive-soft);
-      padding: var(--space-xs) var(--space-sm);
-      border-radius: var(--badge-radius);
-    }
-    .toast-inline[hidden] {
       display: none;
+      z-index: 60;
+    }
+    .status-toast.visible {
+      display: block;
     }
 
-    /* Responsive rules */
     @media (max-width: 960px) {
+      .header-hero,
+      .analytics-grid,
+      .profile-banner,
+      .site-footer {
+        grid-template-columns: minmax(0, 1fr);
+      }
       .kpi-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
-      .matrix-bars {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .filter-toolbar {
+      .news-grid,
+      .gallery-grid {
         grid-template-columns: minmax(0, 1fr);
       }
-      .context-grid {
-        grid-template-columns: minmax(0, 1fr);
-      }
-      .pipeline-grid {
+      .input-controls-row {
         grid-template-columns: minmax(0, 1fr);
       }
     }
 
     @media (max-width: 640px) {
       .page-grid {
-        padding: var(--space-md) var(--space-sm);
-        gap: var(--space-md);
-      }
-      .kpi-grid {
-        grid-template-columns: minmax(0, 1fr);
-      }
-      .matrix-bars {
-        grid-template-columns: minmax(0, 1fr);
-      }
-      .story-summary-row {
-        grid-template-columns: minmax(0, 1fr);
         padding: var(--space-md);
+        gap: var(--space-lg);
       }
-      .story-controls {
-        justify-content: flex-start;
+      .kpi-grid,
+      .profile-stats-grid {
+        grid-template-columns: minmax(0, 1fr);
       }
-      .story-context-panel {
-        padding: var(--space-md);
+      .tab-btn, .btn {
+        width: 100%;
+      }
+      .row-actions {
+        width: 100%;
       }
     }
 
@@ -1153,1245 +1167,1325 @@
 </head>
 <body>
   <div class="page-grid">
-    <!-- Dossier Masthead & Live Status Bar -->
-    <header class="dossier-header">
+
+    <!-- 1. DOSSIER HEADER & LIVE UPDATE STATUS -->
+    <header aria-label="Dashboard Masthead">
       <div class="dossier-bar">
-        <div class="dossier-bar-left">
-          <span class="dossier-pill">Live Wire Dossier</span>
-          <span class="live-badge" id="live-status-badge">
-            <span class="live-dot" aria-hidden="true"></span>
-            <span id="live-status-text">LIVE FEED ACTIVE</span>
-          </span>
-          <span class="dossier-meta">GitHub Pages Static-Sync Model · 4 Desks</span>
+        <div class="dossier-left">
+          <span class="dossier-pill">BRIEFING</span>
+          <span class="dossier-meta">GITHUB PAGES STATIC WIRE MODEL · EDITION 2026.11.13</span>
         </div>
-        <div class="status-bar-right">
-          <span class="utc-readout" id="utc-timestamp-wrap" aria-live="polite">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <span>Updated: <strong id="last-updated-utc">2026-11-13 17:13:00 UTC</strong></span>
-          </span>
-          <button type="button" class="btn btn-secondary btn-compact" id="sync-btn" onclick="simulateFeedSync()">
-            Refresh Snapshot
-          </button>
+        <div class="live-badge" id="live-status-badge" role="status" aria-live="polite">
+          <span class="pulse-dot" aria-hidden="true"></span>
+          <span id="live-status-text">LIVE WIRE ACTIVE</span>
         </div>
       </div>
 
-      <div class="title-row">
-        <div class="title-block">
-          <h1 class="title">Multi-Desk Live News Aggregator</h1>
+      <div class="header-hero">
+        <div>
+          <h1 class="title">Global &amp; Regional News Intelligence Dashboard</h1>
           <p class="standfirst">
-            Real-time situational dispatch across Science, Arizona Local, USA National, and World News — structured for static GitHub Pages deployment.
+            Curated situational monitoring across Science, Arizona Regional, USA National, and World desks—ranked by urgency and engineered for static GitHub Pages deployment.
           </p>
         </div>
-        <div class="header-actions">
-          <button type="button" class="btn btn-secondary" onclick="exportVisibleCsv()">
-            Export View (CSV)
-          </button>
-          <button type="button" class="btn btn-primary" onclick="scrollToArchitecture()">
-            GitHub Pages Spec
-          </button>
+
+        <div class="timestamp-callout">
+          <div class="timestamp-label">
+            <span>Last Feed Sync (UTC)</span>
+            <span id="sync-age-label">JUST VERIFIED</span>
+          </div>
+          <div class="timestamp-value" id="last-updated-utc">2026-11-13 18:42:10 UTC</div>
+          <div class="timestamp-actions">
+            <span class="dossier-meta" id="live-clock-utc">CLOCK: 2026-11-13 18:42:10 UTC</span>
+            <button type="button" class="btn btn-primary btn-sm" id="sync-btn" onclick="triggerFeedSync()">
+              <i data-lucide="refresh-cw" width="14" height="14" aria-hidden="true"></i>
+              <span>Sync Feeds</span>
+            </button>
+          </div>
         </div>
       </div>
     </header>
 
-    <!-- Metric Summary Cards -->
-    <section aria-label="Feed summary metrics" class="kpi-grid">
-      <button type="button" class="figure-card figure-card-interactive" id="kpi-card-all" onclick="quickFilterIntensity('all')">
-        <span class="kpi-label">
-          <span>Active Dispatches</span>
-          <span class="index-num">01</span>
-        </span>
-        <span class="kpi-value" id="kpi-total-count">21</span>
-        <span class="kpi-sub" id="kpi-visible-sub">Showing 21 of 21 stories</span>
-      </button>
+    <!-- 2. TOP KPI HIERARCHY -->
+    <section aria-label="Live Telemetry Metrics">
+      <div class="kpi-grid">
+        <div class="figure-card">
+          <div class="figure-card-head">
+            <span class="figure-label">Tracked Dispatches</span>
+            <span class="index-num">01</span>
+          </div>
+          <div class="figure-value" id="kpi-total">16</div>
+          <div class="figure-sub">
+            <span id="kpi-visible-note">16 matching active filters</span>
+          </div>
+        </div>
 
-      <button type="button" class="figure-card figure-card-interactive" id="kpi-card-critical" onclick="quickFilterIntensity('critical')">
-        <span class="kpi-label">
-          <span>Critical / Breaking</span>
-          <span class="index-num">02</span>
-        </span>
-        <span class="kpi-value kpi-critical" id="kpi-critical-count">4</span>
-        <span class="kpi-sub">Click to isolate breaking alerts</span>
-      </button>
+        <div class="figure-card">
+          <div class="figure-card-head">
+            <span class="figure-label">Critical / Breaking</span>
+            <span class="index-num">02</span>
+          </div>
+          <div class="figure-value" id="kpi-critical">5</div>
+          <div class="figure-sub">
+            <span class="badge badge-critical">URGENT ESCALATION</span>
+          </div>
+        </div>
 
-      <button type="button" class="figure-card figure-card-interactive" id="kpi-card-high" onclick="quickFilterIntensity('high')">
-        <span class="kpi-label">
-          <span>High Intensity</span>
-          <span class="index-num">03</span>
-        </span>
-        <span class="kpi-value kpi-high" id="kpi-high-count">8</span>
-        <span class="kpi-sub">Elevated operational &amp; policy watch</span>
-      </button>
+        <div class="figure-card">
+          <div class="figure-card-head">
+            <span class="figure-label">High Intensity</span>
+            <span class="index-num">03</span>
+          </div>
+          <div class="figure-value" id="kpi-high">7</div>
+          <div class="figure-sub">
+            <span class="badge badge-high">ELEVATED WATCH</span>
+          </div>
+        </div>
 
-      <div class="figure-card">
-        <span class="kpi-label">
-          <span>Integrated Syndication</span>
-          <span class="index-num">04</span>
-        </span>
-        <span class="kpi-value kpi-feeds" id="kpi-sources-count">7</span>
-        <span class="kpi-sub">AP, KJZZ, NPR, NASA, ScienceDaily, arXiv, Phys.org</span>
+        <div class="figure-card">
+          <div class="figure-card-head">
+            <span class="figure-label">Credible Feeds &amp; Saves</span>
+            <span class="index-num">04</span>
+          </div>
+          <div class="figure-value" id="kpi-sources">9 Sources</div>
+          <div class="figure-sub">
+            <span id="kpi-saved-count">0 bookmarked briefings</span>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- Cross-Filtering Category x Intensity Matrix -->
-    <section class="matrix-panel" aria-label="Situational intensity breakdown by category">
-      <div class="matrix-header">
-        <h2 class="matrix-title">Situational Intensity by Desk</h2>
-        <div class="matrix-legend">
-          <span class="legend-item"><span class="legend-swatch swatch-critical" aria-hidden="true"></span> Critical / Breaking</span>
-          <span class="legend-item"><span class="legend-swatch swatch-high" aria-hidden="true"></span> High Intensity</span>
-          <span class="legend-item"><span class="legend-swatch swatch-standard" aria-hidden="true"></span> Standard</span>
+    <!-- 3. SITUATIONAL ANALYTICS & MACRO CONTEXT -->
+    <section aria-label="Situational Intensity & Context Analytics">
+      <div class="analytics-grid">
+        <div class="figure-card">
+          <h2 class="panel-title">Situational Intensity by Desk</h2>
+          <p class="panel-subtitle">Story distribution across Critical, High Intensity, and Standard tiers</p>
+          <div class="chart-wrap">
+            <canvas id="intensityChart" aria-label="Bar chart showing story intensity counts by desk"></canvas>
+          </div>
+        </div>
+
+        <div class="figure-card">
+          <h2 class="panel-title">2026 Baseline Indicators</h2>
+          <p class="panel-subtitle">Verified figures from WHO, IMF/ISA, and Reuters Institute 2026 reports</p>
+          <table class="macro-table">
+            <thead>
+              <tr>
+                <th>Indicator &amp; Source</th>
+                <th class="num">2026 Figure</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Social &amp; video news share (Reuters Inst. 2026)</td>
+                <td class="num">54%</td>
+              </tr>
+              <tr>
+                <td>News websites &amp; apps shift since 2020</td>
+                <td class="num">−12 pp</td>
+              </tr>
+              <tr>
+                <td>WHO TB domestic funding (2024–2025, +14%)</td>
+                <td class="num">$5.6B</td>
+              </tr>
+              <tr>
+                <td>Global TB incidence / deaths (2025 est.)</td>
+                <td class="num">10.6M / 1.1M</td>
+              </tr>
+              <tr>
+                <td>IMF global GDP growth / headline inflation</td>
+                <td class="num">3.1% / 4.7%</td>
+              </tr>
+              <tr>
+                <td>Strait of Hormuz share of global oil trade</td>
+                <td class="num">~25%</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
-      <div class="matrix-bars" id="matrix-bars"></div>
     </section>
 
-    <!-- Category Tabs, Search, Urgency Toggles, & Sort Controls -->
-    <section class="controls-section" aria-label="Feed filters and search">
-      <div class="tabs-row">
-        <div class="tab-group" role="tablist" aria-label="News categories" id="category-tablist">
-          <button type="button" class="tab-btn" role="tab" aria-selected="true" data-category="all" onclick="setCategory('all')">
-            All Feeds <span class="tab-count" id="count-all">21</span>
-          </button>
-          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-category="science" onclick="setCategory('science')">
-            Science <span class="tab-count" id="count-science">4</span>
-          </button>
-          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-category="arizona" onclick="setCategory('arizona')">
-            Arizona Local <span class="tab-count" id="count-arizona">4</span>
-          </button>
-          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-category="usa" onclick="setCategory('usa')">
-            USA National <span class="tab-count" id="count-usa">8</span>
-          </button>
-          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-category="world" onclick="setCategory('world')">
-            World News <span class="tab-count" id="count-world">5</span>
-          </button>
+    <!-- 4. GENRE / CATEGORY TABS, URGENCY RANKING & CONTROLS -->
+    <section aria-label="News Wire Controls and Filters">
+      <div class="dossier-bar">
+        <div class="dossier-left">
+          <span class="dossier-pill">WIRE DESKS</span>
+          <span class="dossier-meta">FILTER BY CATEGORY, SITUATIONAL INTENSITY &amp; URGENCY RANK</span>
+        </div>
+        <span class="dossier-meta" id="active-filter-readout">SHOWING: ALL DESKS · ALL INTENSITIES</span>
+      </div>
+
+      <div class="controls-panel">
+        <div class="filter-row">
+          <div>
+            <span class="field-label" style="display:block; margin-bottom: var(--space-xs);">Category Desks</span>
+            <div class="tab-group" role="group" aria-label="News Category Tabs">
+              <button type="button" class="tab-btn" data-category="all" aria-pressed="true" onclick="setCategory('all')">
+                <span>All Desks</span>
+                <span class="tab-count" id="count-all">16</span>
+              </button>
+              <button type="button" class="tab-btn" data-category="science" aria-pressed="false" onclick="setCategory('science')">
+                <span>Science</span>
+                <span class="tab-count" id="count-science">5</span>
+              </button>
+              <button type="button" class="tab-btn" data-category="arizona" aria-pressed="false" onclick="setCategory('arizona')">
+                <span>Arizona</span>
+                <span class="tab-count" id="count-arizona">3</span>
+              </button>
+              <button type="button" class="tab-btn" data-category="usa" aria-pressed="false" onclick="setCategory('usa')">
+                <span>USA</span>
+                <span class="tab-count" id="count-usa">4</span>
+              </button>
+              <button type="button" class="tab-btn" data-category="world" aria-pressed="false" onclick="setCategory('world')">
+                <span>World</span>
+                <span class="tab-count" id="count-world">4</span>
+              </button>
+              <button type="button" class="tab-btn" data-category="saved" aria-pressed="false" onclick="setCategory('saved')">
+                <span>Saved</span>
+                <span class="tab-count" id="count-saved">0</span>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <span class="field-label" style="display:block; margin-bottom: var(--space-xs);">Situational Intensity</span>
+            <div class="intensity-group" role="group" aria-label="Situational Intensity Filter">
+              <button type="button" class="intensity-pill-btn" data-intensity="all" aria-pressed="true" onclick="setIntensity('all')">
+                All Levels
+              </button>
+              <button type="button" class="intensity-pill-btn" data-intensity="critical" aria-pressed="false" onclick="setIntensity('critical')">
+                <span class="badge badge-critical">Critical</span>
+              </button>
+              <button type="button" class="intensity-pill-btn" data-intensity="high" aria-pressed="false" onclick="setIntensity('high')">
+                <span class="badge badge-high">High</span>
+              </button>
+              <button type="button" class="intensity-pill-btn" data-intensity="standard" aria-pressed="false" onclick="setIntensity('standard')">
+                <span class="badge badge-standard">Standard</span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <button type="button" class="urgency-pill" id="bookmark-filter-btn" aria-pressed="false" onclick="toggleBookmarkFilter()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-          </svg>
-          <span>Saved (<span id="saved-count">0</span>)</span>
+        <div class="input-controls-row">
+          <div class="field-group">
+            <label class="field-label" for="search-input">Search Headlines, Context, or Source</label>
+            <input type="search" id="search-input" class="text-input" placeholder="e.g. FAA, Tuberculosis, Microsoft, COP31, NASA…" oninput="handleSearchInput(this.value)">
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="sort-select">Sort Dispatches By</label>
+            <select id="sort-select" class="select-input" onchange="setSortOrder(this.value)">
+              <option value="urgency">Situational Urgency (Critical → Standard)</option>
+              <option value="newest">Newest Timestamp (UTC)</option>
+              <option value="category">Desk Category (A–Z)</option>
+            </select>
+          </div>
+
+          <div class="row-actions">
+            <button type="button" class="btn btn-secondary" onclick="toggleExpandAll()">
+              <i data-lucide="chevrons-up-down" width="16" height="16" aria-hidden="true"></i>
+              <span id="expand-all-label">Expand All</span>
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="exportJsonSnapshot()">
+              <i data-lucide="download" width="16" height="16" aria-hidden="true"></i>
+              <span>Export JSON</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. EXPANDABLE DROP-DOWN NEWS CARDS -->
+    <section aria-label="News Dispatches">
+      <div class="news-feed-header">
+        <h2 class="panel-title" id="feed-section-heading">Active Intelligence Wire</h2>
+        <span class="dossier-meta" id="feed-result-count">16 STORIES · CLICK ANY CARD TO EXPAND FULL BRIEFING</span>
+      </div>
+
+      <div class="az-desk-notice" id="az-desk-notice">
+        <strong>Arizona &amp; Southwest Regional Desk Note:</strong> Dispatches below track verified Associated Press &amp; federal alerts affecting the US South &amp; West (early flu surge, nationwide FAA ground stop, and Western watershed wildfire risks). For GitHub Pages deployment, connect your local municipal RSS feeds (e.g., AZCentral / ADOT) in <code>feeds-config.json</code>.
+      </div>
+
+      <div class="news-grid" id="news-grid" aria-live="polite"></div>
+    </section>
+
+    <!-- 6. DEDICATED SUBSECTION: RACHEL COOK (@RACHELC00K) MODELING & PHOTO GALLERY -->
+    <section class="gallery-section" aria-label="Rachel Cook Modeling Career and Photo Gallery">
+      <div class="dossier-bar">
+        <div class="dossier-left">
+          <span class="dossier-pill">CREATOR &amp; MODELING SPOTLIGHT</span>
+          <span class="dossier-meta">@RACHELC00K · MODELING PORTFOLIO &amp; SOCIAL DISPATCHES</span>
+        </div>
+        <span class="dossier-meta">SOURCE: TIKTOK (@RACHELC00K) &amp; PINTEREST MODELING ARCHIVE</span>
+      </div>
+
+      <div class="profile-banner">
+        <div class="profile-identity">
+          <div class="profile-handle-row">
+            <h2 class="panel-title">Rachel Cook (@rachelc00k)</h2>
+            <span class="badge badge-category">Editorial &amp; Lifestyle</span>
+          </div>
+          <p class="profile-bio">“Model, roadtripper, &amp; farmer in training”</p>
+          <p class="profile-channels">
+            Active Channels: TikTok (<code>@rachelc00k</code> · Videos, Short dramas, Playlists: Road trip) · Portfolio Hub (<code>Linktr.ee/rachelc00k</code>) · Pinterest (<code>Rachel Cook Modeling</code>)
+          </p>
+          <div class="tab-group" role="group" aria-label="Rachel Cook Gallery Filters" style="margin-top: var(--space-sm);">
+            <button type="button" class="tab-btn btn-sm" data-gallery-filter="all" aria-pressed="true" onclick="setGalleryFilter('all')">All Updates (4)</button>
+            <button type="button" class="tab-btn btn-sm" data-gallery-filter="modeling" aria-pressed="false" onclick="setGalleryFilter('modeling')">Modeling Portfolio</button>
+            <button type="button" class="tab-btn btn-sm" data-gallery-filter="roadtrip" aria-pressed="false" onclick="setGalleryFilter('roadtrip')">Road Trip (12 Posts)</button>
+            <button type="button" class="tab-btn btn-sm" data-gallery-filter="farm" aria-pressed="false" onclick="setGalleryFilter('farm')">Farm &amp; Drama Reels</button>
+          </div>
+        </div>
+
+        <div class="profile-stats-grid">
+          <div class="profile-stat-tile">
+            <div class="profile-stat-num">521.8K</div>
+            <div class="profile-stat-lbl">Followers</div>
+          </div>
+          <div class="profile-stat-tile">
+            <div class="profile-stat-num">3.6M</div>
+            <div class="profile-stat-lbl">Total Likes</div>
+          </div>
+          <div class="profile-stat-tile">
+            <div class="profile-stat-num">207 / 12</div>
+            <div class="profile-stat-lbl">Following / Road Trips</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-grid" id="rachel-gallery-grid"></div>
+    </section>
+
+    <!-- 7. GITHUB PAGES DEPLOYMENT MODEL FOOTER -->
+    <footer class="site-footer" aria-label="GitHub Pages Architecture and Source Credits">
+      <div>
+        <h3 class="panel-title" style="font-size: 1.05rem;">GitHub Pages Static Deployment &amp; Source Integrity</h3>
+        <p style="margin: var(--space-xs) 0;">
+          This dashboard is structured as a single-file static application ready for GitHub Pages (<code>index.html</code>). In production, a scheduled GitHub Actions workflow polls verified RSS/Atom XML feeds (NASA, arXiv, ScienceDaily, Phys.org, WHO, AP, Global Issues) and writes <code>data/feed.json</code> with exact UTC sync timestamps.
+        </p>
+        <p style="margin: var(--space-xs) 0;">
+          <strong>Verified Sources Referenced:</strong> World Health Organization (who.int), Associated Press (apnews.com), ISA Global Outlook (isa-world.com), Global Issues / IPS / UN News (globalissues.org), Reuters Institute 2026 Digital News Report (reutersinstitute.politics.ox.ac.uk), NASA RSS (nasa.gov), arXiv (info.arxiv.org), Phys.org (phys.org), ScienceDaily (sciencedaily.com), TikTok (<code>@rachelc00k</code>), and Pinterest Modeling Archive.
+        </p>
+      </div>
+
+      <div>
+        <span class="field-label" style="display:block; margin-bottom: var(--space-xs);">GitHub Actions Cron Sync Pattern (Static Pages)</span>
+        <div class="code-snippet">on:
+  schedule:
+    - cron: '*/15 * * * *'
+jobs:
+  sync_feeds:
+    runs-on: ubuntu-latest
+    steps:
+      - run: python scripts/poll_rss.py --out data/feed.json
+      - run: git commit -am "chore: sync UTC wire" &amp;&amp; git push</div>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Lightbox Modal for High-Resolution Gallery Inspection -->
+  <div class="lightbox-backdrop" id="gallery-lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="lightbox-title" onclick="handleLightboxBackdrop(event)">
+    <div class="lightbox-dialog">
+      <div class="lightbox-header">
+        <div>
+          <span class="dossier-pill" id="lightbox-tag">EDITORIAL PLATE</span>
+          <strong id="lightbox-title" style="margin-left: var(--space-sm); font-family: var(--font-headline); font-size: 1.15rem;">Plate Preview</strong>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeLightbox()" aria-label="Close high-resolution preview">
+          <i data-lucide="x" width="16" height="16" aria-hidden="true"></i>
+          <span>Close</span>
         </button>
       </div>
-
-      <div class="filter-toolbar">
-        <div class="field-group">
-          <label class="field-label" for="search-input">Search headlines, context, or outlet</label>
-          <div class="search-wrap">
-            <input type="search" id="search-input" class="text-input" placeholder="e.g., FAA, Tucson, Hubble, Iran, Microsoft..." oninput="setSearchQuery(this.value)">
-            <button type="button" class="btn btn-secondary btn-compact" id="clear-search-btn" onclick="clearSearch()" hidden>Clear</button>
-          </div>
-        </div>
-
-        <div class="field-group">
-          <label class="field-label" for="sort-select">Sort stories by</label>
-          <select id="sort-select" class="select-input" onchange="setSortMode(this.value)">
-            <option value="intensity">Situational Intensity (Critical first)</option>
-            <option value="recency">Recency (Newest first)</option>
-            <option value="category">Desk / Category (A–Z)</option>
-          </select>
-        </div>
-
-        <div class="field-group">
-          <span class="field-label" id="urgency-group-label">Urgency filter toggles</span>
-          <div class="urgency-toggle-group" role="group" aria-labelledby="urgency-group-label">
-            <button type="button" class="urgency-pill" data-level="all" aria-pressed="true" onclick="setIntensity('all')">All Levels</button>
-            <button type="button" class="urgency-pill" data-level="critical" aria-pressed="false" onclick="setIntensity('critical')">Critical / Breaking</button>
-            <button type="button" class="urgency-pill" data-level="high" aria-pressed="false" onclick="setIntensity('high')">High Intensity</button>
-            <button type="button" class="urgency-pill" data-level="standard" aria-pressed="false" onclick="setIntensity('standard')">Standard</button>
-          </div>
-        </div>
+      <div class="lightbox-visual" id="lightbox-visual"></div>
+      <div class="lightbox-caption">
+        <p id="lightbox-desc" style="margin: 0; font-size: 0.9375rem; color: var(--on-surface);"></p>
+        <span id="lightbox-meta" class="dossier-meta"></span>
       </div>
-
-      <div class="feed-meta-bar">
-        <span class="feed-count-summary" id="feed-status-line" aria-live="polite">
-          Displaying 21 stories · Sorted by Situational Intensity
-        </span>
-        <div class="bulk-actions">
-          <span class="toast-inline" id="action-toast" hidden aria-live="polite"></span>
-          <button type="button" class="btn btn-secondary btn-compact" onclick="expandAllVisible()">Expand All Contexts</button>
-          <button type="button" class="btn btn-secondary btn-compact" onclick="collapseAllVisible()">Collapse All</button>
-          <button type="button" class="btn btn-secondary btn-compact" onclick="resetAllFilters()">Reset Filters</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Story Feed (Expandable Accordion Cards) -->
-    <main aria-label="Aggregated news stories">
-      <div class="story-list" id="story-list"></div>
-    </main>
-
-    <!-- GitHub Pages Static-Sync Architecture Reference -->
-    <aside class="aside-box" id="github-pages-spec" aria-label="GitHub Pages integration architecture">
-      <div class="aside-header">
-        <div>
-          <span class="dossier-pill">Architecture Model</span>
-          <h2 class="aside-title" style="margin-top: var(--space-xs);">GitHub Pages Static-Feed Integration Blueprint</h2>
-        </div>
-        <span class="dossier-meta">Zero-Backend · Scheduled Static Build</span>
-      </div>
-
-      <div class="pipeline-grid">
-        <div class="pipeline-step">
-          <h4>1. Scheduled RSS/ATOM Ingestion</h4>
-          <p>
-            A GitHub Actions cron workflow polls syndicated XML/ATOM endpoints on a 15-minute cadence:
-            <span class="mono-inline">apnews.com</span>, <span class="mono-inline">kjzz.org</span>,
-            <span class="mono-inline">nasa.gov/feed/</span>, <span class="mono-inline">sciencedaily.com/rss/top/science.xml</span>,
-            <span class="mono-inline">phys.org/rss-feed/</span>, and <span class="mono-inline">rss.arxiv.org/rss/cs.ai+q-bio.NC</span>.
-          </p>
-        </div>
-        <div class="pipeline-step">
-          <h4>2. Intensity Scoring &amp; Deduplication</h4>
-          <p>
-            Headlines are normalized into the four dashboard desks, scored into
-            <strong>Critical/Breaking</strong> (active nationwide outages, airspace stops, geopolitical flashpoints),
-            <strong>High Intensity</strong> (biosecurity, climate summits, leadership shifts), or
-            <strong>Standard</strong>, and stamped with the exact UTC build time.
-          </p>
-        </div>
-        <div class="pipeline-step">
-          <h4>3. Static Bundle &amp; Client State</h4>
-          <p>
-            The normalized payload is committed to <span class="mono-inline">data/feeds.json</span> and deployed straight to GitHub Pages.
-            Because static hosting serves pre-compiled HTML/JS with no server database, client bookmarks and filter preferences persist via lightweight runtime state.
-          </p>
-        </div>
-      </div>
-
-      <footer class="sources-footer">
-        <span>
-          Sources grounded from November 13, 2026 dispatches: Associated Press, KJZZ 91.5 FM &amp; NPR News, NASA Science &amp; News Releases, ScienceDaily, Phys.org (Science X), and arXiv Syndication.
-        </span>
-        <span class="dossier-meta">Snapshot: 2026-11-13 17:13:00 UTC</span>
-      </footer>
-    </aside>
+    </div>
   </div>
+
+  <div class="status-toast" id="status-toast" role="status" aria-live="polite"></div>
 
   <api-shim></api-shim>
   <script>
-    const BASELINE_UTC = `2026-11-13 17:13:00 UTC`;
-
-    const CATEGORY_META = {
-      science: { label: `Science`, order: 1 },
-      arizona: { label: `Arizona Local`, order: 2 },
-      usa: { label: `USA National`, order: 3 },
-      world: { label: `World News`, order: 4 }
-    };
-
-    const INTENSITY_META = {
-      critical: { label: `Critical / Breaking`, rank: 3 },
-      high: { label: `High Intensity`, rank: 2 },
-      standard: { label: `Standard`, rank: 1 }
-    };
-
-    const STORIES = [
+    const NEWS_ITEMS = [
       {
-        id: `usa-faa-ground-stop`,
-        category: `usa`,
-        intensity: `critical`,
-        publishedUtc: `2026-11-13 16:55 UTC`,
-        recencyScore: 202611131655,
-        relativeTime: `18 mins ago · LIVE`,
-        headline: `Flights halted nationwide as air traffic control telecommunications failure triggers FAA ground stop`,
-        deck: `Hundreds of flights diverted and departures frozen across major U.S. hubs including Los Angeles, Seattle, Atlanta, and Washington Dulles.`,
-        outlet: `Associated Press / NPR`,
-        desk: `U.S. Transportation`,
-        author: `Joel Rose, Erika Ryan, Sarah Handel & AP Staff`,
-        feedEndpoint: `apnews.com/hub/immigration (U.S. Wire) & kjzz.org/npr-top-stories`,
-        articlePath: `apnews.com/article/faa-ground-stop-sports-091ecf4f82a6158473357feeb05cf593`,
-        context: `The Federal Aviation Administration took the extraordinary step Friday afternoon, Nov. 13, 2026, of halting departures at airports across the United States after a telecommunications outage struck Air Traffic Control Centers. Department of Homeland Security Secretary Markwayne Mullin briefed reporters at the White House confirming there is no indication of a security threat.`,
-        summaryPoints: [
-          `No planes are taking off nationwide, leaving millions of travelers waiting at terminals from LAX and SEA-TAC to Atlanta Hartsfield-Jackson and Washington Dulles.`,
-          `Former FAA head of air traffic investigations Tom Lintner described the communications failure at Air Traffic Control Centers as an exceptional national disruption.`,
-          `The sudden FAA ground stop has also stranded collegiate and professional sports teams, throwing the weekend schedule into chaos.`
-        ]
-      },
-      {
-        id: `az-faa-outage`,
-        category: `arizona`,
-        intensity: `critical`,
-        publishedUtc: `2026-11-13 15:40 UTC`,
-        recencyScore: 202611131540,
-        relativeTime: `2 hours ago`,
-        headline: `Telecommunications outage leads FAA to ground all flights, including across Arizona airports`,
-        deck: `Regional air travel in Phoenix and Tucson is halted alongside the nationwide Air Traffic Control Center communications disruption.`,
-        outlet: `KJZZ 91.5 FM`,
-        desk: `Arizona Business & Transit`,
-        author: `Connor Greenwall`,
-        feedEndpoint: `kjzz.org/business`,
-        articlePath: `kjzz.org/business/2026-11-13/telecommunications-outage-leads-faa-to-ground-all-flights-including-in-arizona`,
-        context: `KJZZ Business reporting confirms Arizona departures and arrivals are directly impacted by Friday's federal Air Traffic Control telecommunications outage, prompting airlines and airport operations to hold aircraft on tarmacs while recovery diagnostics proceed.`,
-        summaryPoints: [
-          `All departures at Arizona commercial airports are paused under the nationwide FAA ground stop order.`,
-          `Passengers across the state report holding on tarmacs without firm restoration timelines while ATC communications centers reboot.`,
-          `Filed with a 0:45 broadcast dispatch for Arizona commuters and business travelers.`
-        ]
-      },
-      {
-        id: `usa-microsoft-outage`,
-        category: `usa`,
-        intensity: `critical`,
-        publishedUtc: `2026-11-13 16:48 UTC`,
-        recencyScore: 202611131648,
-        relativeTime: `25 mins ago · LIVE`,
-        headline: `Widespread Microsoft outage disrupts Teams, Outlook, and Copilot across essential services`,
-        deck: `Silenced workplace inboxes and enterprise messaging tools spotlight systemic risks of single-provider dependency.`,
-        outlet: `Associated Press`,
-        desk: `Business & Technology`,
-        author: `AP Technology & Business Desks`,
-        feedEndpoint: `apnews.com/hub/artificial-intelligence`,
-        articlePath: `apnews.com/hub/tariffs`,
-        context: `A major outage across Microsoft cloud productivity applications knocked Teams, Outlook, and Copilot offline for organizations worldwide on Nov. 13, 2026. Parallel Spanish-language AP alerts tracked widespread disruption across enterprise and public-sector workflows.`,
-        summaryPoints: [
-          `Core collaboration and email services—Teams, Outlook, and Copilot—experienced live operational degradation.`,
-          `Technology policy analysts emphasize how single-vendor concentration amplifies downtime across critical business and civic infrastructure.`,
-          `Both English and AP Español technology wires flagged the cascading impact on daily workplace operations.`
-        ]
-      },
-      {
-        id: `world-iran-iaea`,
+        id: `who-tb-2026`,
         category: `world`,
         intensity: `critical`,
-        publishedUtc: `2026-11-13 16:38 UTC`,
-        recencyScore: 202611131638,
-        relativeTime: `35 mins ago`,
-        headline: `Iran tells UN nuclear agency monitoring cannot proceed under threat as Rubio rules out further U.S. strikes`,
-        deck: `Tehran suspends verification access while Washington signals economic pressure has reduced need for additional military action.`,
-        outlet: `Associated Press`,
-        desk: `Middle East & Diplomacy`,
-        author: `AP Diplomatic & World Wire`,
-        feedEndpoint: `apnews.com/hub/iran`,
-        articlePath: `apnews.com/hub/iran`,
-        context: `Iran formally notified the United Nations nuclear watchdog that inspection and monitoring activities cannot continue while the country remains under military threat. In parallel remarks, Secretary of State Marco Rubio stated that further U.S. military action is unnecessary against an economically weakened Iran.`,
-        summaryPoints: [
-          `UN nuclear inspectors face halted site monitoring amid ongoing regional security tensions.`,
-          `Secretary Rubio stated that economic strain inside Iran reduces the need for additional U.S. military intervention.`,
-          `In separate domestic commentary following GOP midterm losses, Rubio acknowledged that American households are struggling economically.`
+        intensityScore: 96,
+        timestamp: `2026-11-12 14:00:00 UTC`,
+        source: `World Health Organization (who.int)`,
+        feedPath: `who.int/news · Global Tuberculosis Report 2026`,
+        headline: `WHO Reports 1.1M TB Deaths in 2025 as Countries Boost Domestic Funding 14% to US$ 5.6B`,
+        summary: `Global tuberculosis cases reached 10.6 million in 2025, with domestic health budgets rising 14% to partially offset steep international funding declines.`,
+        context: `Released November 12, 2026, the WHO Global Tuberculosis Report 2026 highlights a sharp financing divergence: national governments expanded domestic TB allocations to US$ 5.6 billion between 2024 and 2025, compensating for cuts in external donor funding. While the world reached WHO's first mortality milestone five years behind schedule, incidence has fallen only 14% since 2015—far short of the 50% target—leaving TB as the deadliest single infectious agent.`,
+        bullets: [
+          `Estimated 10.6 million people developed TB and 1.1 million died in 2025; 86 million lives saved via treatment since 2000.`,
+          `30 high-burden countries account for 88% of cases; Americas incidence climbed for the 5th straight year (+13% above 2015 levels).`,
+          `2.2 million of 10.6 million cases went undiagnosed or unreported; only 59% of newly diagnosed patients received a WHO-recommended rapid test.`,
+          `TB research funding stood at US$ 1.2B in 2023—less than a quarter of the US$ 5B annual 2027 target.`
         ]
       },
       {
-        id: `az-screwworm-tucson`,
+        id: `ap-hormuz-iran-2026`,
+        category: `world`,
+        intensity: `critical`,
+        intensityScore: 95,
+        timestamp: `2026-11-13 18:10:00 UTC`,
+        source: `AP News & ISA World (apnews.com · isa-world.com)`,
+        feedPath: `apnews.com/hub/iran · isa-world.com`,
+        headline: `Iran Halts UN Nuclear Monitoring Under Threat Amid Strait of Hormuz Energy Risks`,
+        summary: `Tehran told the UN nuclear agency that inspections cannot proceed while under threat, as regional markets monitor Strait of Hormuz oil shipments and insurance rates.`,
+        context: `Heightened US–Iran friction continues to anchor global geopolitical risk in November 2026. While US Secretary of State Marco Rubio stated further military action is not needed against an economically weakened Iran, ISA analysts warn that Middle East observers anticipate potential escalation that could disrupt the Strait of Hormuz—a chokepoint handling roughly one-fourth of global oil trade.`,
+        bullets: [
+          `Iran notified the UN nuclear agency that monitoring cannot proceed under active threat conditions.`,
+          `Roughly 25% of global oil trade transits the Strait of Hormuz; IEA coordinated an emergency reserve release earlier in 2026.`,
+          `ISA November 2026 watchpoints prioritize physical Hormuz shipments, diesel availability, and maritime shipping insurance premiums.`
+        ]
+      },
+      {
+        id: `ap-faa-groundstop-az`,
+        category: `arizona`,
+        intensity: `critical`,
+        intensityScore: 93,
+        timestamp: `2026-11-13 17:45:00 UTC`,
+        source: `AP News & USA Today (apnews.com · Southwest Corridor)`,
+        feedPath: `apnews.com/hub/immigration · National Airspace Wire`,
+        headline: `FAA Orders Nationwide Ground Stop Over ATC Comms Failure, Stranding Regional & Western Travelers`,
+        summary: `Air traffic control communications problems forced flights to halt across US airports, diverting hundreds of aircraft and disrupting Southwest transit corridors.`,
+        context: `A sudden Federal Aviation Administration ground stop cascaded across domestic terminals on November 13, 2026, citing air traffic control communications failures and safety protocols while noting no external threat to the United States. Regional hubs across the West and sports travel schedules experienced immediate bottlenecks and hundreds of flight diversions.`,
+        bullets: [
+          `Hundreds of commercial flights diverted mid-route; airports nationwide temporarily halted departures.`,
+          `Officials attributed the disruption to air traffic control communications problems rather than a security threat.`,
+          `Arizona / Southwest Desk slot monitors cascading delays into Phoenix and regional desert transit corridors.`
+        ]
+      },
+      {
+        id: `ap-microsoft-outage`,
+        category: `usa`,
+        intensity: `critical`,
+        intensityScore: 92,
+        timestamp: `2026-11-13 16:50:00 UTC`,
+        source: `AP News Business & Tech (apnews.com)`,
+        feedPath: `apnews.com/hub/artificial-intelligence`,
+        headline: `Massive Microsoft 365 Outage Knocks Out Outlook, Teams, and Copilot Across US`,
+        summary: `A widespread cloud outage silenced enterprise inboxes and collaboration tools, exposing systemic single-vendor dependency risks.`,
+        context: `Enterprises, municipalities, and newsrooms experienced hours of disruption as Microsoft Outlook, Teams, and Copilot went dark on November 13, 2026. Business and technology analysts cited the failure as a stark stress test of single-provider concentration in essential communications infrastructure.`,
+        bullets: [
+          `Core productivity services—Outlook, Teams, and Copilot—suffered widespread unavailability across North America and multilingual markets.`,
+          `Technology risk briefings emphasize diversification and offline failover for critical public and corporate operations.`
+        ]
+      },
+      {
+        id: `un-gaza-drc-2026`,
+        category: `world`,
+        intensity: `critical`,
+        intensityScore: 90,
+        timestamp: `2026-11-13 15:55:00 UTC`,
+        source: `UN News & WHO Joint Release (globalissues.org · who.int)`,
+        feedPath: `globalissues.org/news/2026 · who.int/news`,
+        headline: `Urgent Gaza Winter Supply Appeal Issued as Conflict & Ebola Deepen DR Congo Hunger Crisis`,
+        summary: `Humanitarian agencies warn "lives are at stake" in Gaza after deadly rainfall, while armed unrest in DR Congo hampers Ebola containment and fuels record food insecurity.`,
+        context: `Two acute humanitarian emergencies converged in November 13 UN and WHO dispatches. In Gaza, weekend rainfall compounded shelter shortages, prompting an urgent call for swift winter aid entry. Simultaneously, a joint WHO release documented escalating acute food insecurity in the Democratic Republic of the Congo as armed group unrest obstructs Ebola outbreak response teams.`,
+        bullets: [
+          `UN and humanitarian partners demand immediate winterization supplies into Gaza following deadly rainfall.`,
+          `DR Congo faces dual pressure from active Ebola transmission and conflict-driven acute food insecurity projections.`,
+          `Both crises underscore persistent humanitarian access barriers documented by Inter Press Service and UN News.`
+        ]
+      },
+      {
+        id: `ap-nvidia-huang`,
+        category: `usa`,
+        intensity: `high`,
+        intensityScore: 84,
+        timestamp: `2026-11-13 14:15:00 UTC`,
+        source: `AP News Business & Tech (apnews.com)`,
+        feedPath: `apnews.com/hub/tariffs · Technology Desk`,
+        headline: `Jensen Huang Departs Nvidia, Prompting Market & Policy Assessment Across US AI Sector`,
+        summary: `Industry and Washington observers weigh supply-chain and governance implications following Nvidia chief Jensen Huang's exit.`,
+        context: `Jensen Huang's final hours at Nvidia sparked intense scrutiny across both Silicon Valley and Washington policy circles on November 13, 2026. Given Nvidia's central position in US–China semiconductor competition and AI compute infrastructure, leadership transition adds fresh uncertainty to 2027 hardware roadmaps.`,
+        bullets: [
+          `AP Business examines strategic ripples for AI model training, cloud capital expenditure, and semiconductor diplomacy.`,
+          `Follows broader 2026 intensification of US–China tech rivalry in AI chips and export controls.`
+        ]
+      },
+      {
+        id: `ap-starship-orbit`,
+        category: `science`,
+        intensity: `high`,
+        intensityScore: 82,
+        timestamp: `2026-11-13 15:20:00 UTC`,
+        source: `AP News Science (apnews.com)`,
+        feedPath: `apnews.com/hub/space`,
+        headline: `SpaceX Starship Soars Into Orbit After Booster Water Landing Thwarts Double Catch`,
+        summary: `Starship achieved orbital flight on its latest mission, though a booster splashdown prevented a synchronized mechanical tower recovery.`,
+        context: `The heavy-lift launch vehicle demonstrated orbital insertion milestones while highlighting the precision constraints of booster tower recovery. Coverage pairs with NASA Space Station and Artemis RSS mission streams.`,
+        bullets: [
+          `Upper-stage Starship reached orbit successfully during the mid-November flight window.`,
+          `First-stage booster diverted to a controlled water landing, deferring the planned double tower catch.`
+        ]
+      },
+      {
+        id: `ips-cop31-antalya`,
+        category: `world`,
+        intensity: `high`,
+        intensityScore: 81,
+        timestamp: `2026-11-13 13:45:00 UTC`,
+        source: `Inter Press Service via Global Issues (globalissues.org)`,
+        feedPath: `globalissues.org/news/2026`,
+        headline: `COP31 Antalya: Advocates Warn on African Waste Incineration & Launch AI Climate Info Pact`,
+        summary: `Negotiators in Antalya, Türkiye confront methane risks from planned African incinerators alongside new initiatives linking climate extremes to mental health and AI accuracy.`,
+        context: `At the COP31 climate summit in Antalya on November 13, 2026, zero-waste coalitions cautioned that municipal waste-to-energy incineration plants across Africa could lock in emissions and undermine methane reduction goals. Summit sessions also introduced an initiative to safeguard AI-mediated climate information and highlighted new research tying extreme weather to mental health challenges in Africa.`,
+        bullets: [
+          `Zero-waste groups in Antalya & Nairobi urge non-burn circular strategies instead of incineration infrastructure.`,
+          `COP31 launched a dedicated program targeting AI reliability in public climate reporting.`,
+          `Parallel global governance talks led by CIVICUS and the Article 109 Coalition called for UN Charter reform.`
+        ]
+      },
+      {
+        id: `ap-flu-southwest-az`,
         category: `arizona`,
         intensity: `high`,
-        publishedUtc: `2026-11-13 16:13 UTC`,
-        recencyScore: 202611131613,
-        relativeTime: `1 hour ago`,
-        headline: `7th case of New World screwworm identified in Arizona, confirmed in a horse near Tucson`,
-        deck: `Regional agricultural and veterinary authorities track the seventh detection of the flesh-eating parasite in southern Arizona.`,
-        outlet: `KJZZ Fronteras Desk`,
-        desk: `Borderlands & Biosecurity`,
-        author: `Lindsey C. Riley`,
-        feedEndpoint: `kjzz.org/fronteras-desk`,
-        articlePath: `kjzz.org/fronteras-desk/2026-11-13/7th-case-of-new-world-screwworm-identified-in-arizona-this-time-its-near-tucson`,
-        context: `Agricultural biosecurity monitors confirmed Arizona's seventh case of the New World screwworm on Friday, Nov. 13, 2026. The parasitic fly larvae pose severe threats to livestock, horses, wildlife, and domestic pets along borderland corridors.`,
-        summaryPoints: [
-          `Confirmed Friday in an equine case located near Tucson, marking the seventh statewide detection.`,
-          `The parasite causes tissue damage in warm-blooded animals, prompting heightened vigilance for ranchers and pet owners.`,
-          `Reported by KJZZ's cross-border Fronteras Desk covering Arizona and Sonora agricultural health.`
+        intensityScore: 79,
+        timestamp: `2026-11-13 13:10:00 UTC`,
+        source: `AP News Health — South & West Desk (apnews.com)`,
+        feedPath: `apnews.com/hub/be-well-trending`,
+        headline: `Early US Flu Season Surges Across the South and West, Putting Regional Clinics on Alert`,
+        summary: `Health surveillance shows an unusually early start to the 2026–27 US influenza wave, heavily concentrated across Southern and Western states.`,
+        context: `Public health tracking published November 13 indicates influenza activity accelerating weeks ahead of historical winter baselines across the South and West. Regional health systems across the Southwest are preparing triage capacity alongside updated federal advisories on measles elimination risks and GLP-1 safety labels.`,
+        bullets: [
+          `AP Health confirms the 2026 flu surge is specifically targeting Southern and Western regions first.`,
+          `Clinicians advise early vaccination uptake ahead of holiday travel disruptions.`
         ]
       },
       {
-        id: `usa-bridge-strike`,
-        category: `usa`,
-        intensity: `high`,
-        publishedUtc: `2026-11-13 16:31 UTC`,
-        recencyScore: 202611131631,
-        relativeTime: `42 mins ago`,
-        headline: `Cargo ship strikes bridge between New Jersey and Philadelphia, triggering major traffic backup`,
-        deck: `Maritime collision disrupts Delaware River commuter corridor as structural and marine inspectors respond.`,
-        outlet: `Associated Press`,
-        desk: `U.S. Infrastructure`,
-        author: `AP National Desk`,
-        feedEndpoint: `apnews.com/hub/immigration`,
-        articlePath: `apnews.com/hub/immigration`,
-        context: `A commercial cargo vessel collided with a bridge span linking New Jersey and Philadelphia on Friday, forcing lane closures and backing up interstate commuter and freight traffic across the Delaware Valley.`,
-        summaryPoints: [
-          `Bridge approaches between New Jersey and Philadelphia experienced immediate congestion following the vessel impact.`,
-          `Emergency engineering teams mobilized to inspect pier integrity and clear maritime navigation lanes.`,
-          `Highlights ongoing infrastructure vulnerability along high-volume East Coast port corridors.`
-        ]
-      },
-      {
-        id: `usa-health-flu-measles`,
-        category: `usa`,
-        intensity: `high`,
-        publishedUtc: `2026-11-13 16:00 UTC`,
-        recencyScore: 202611131600,
-        relativeTime: `1 hour ago`,
-        headline: `Early U.S. flu surge hits South and West as U.S. and Mexico risk losing measles-free designation`,
-        deck: `Federal public health trackers flag concurrent respiratory and vaccine-preventable outbreaks alongside new FDA GLP-1 warnings.`,
-        outlet: `Associated Press`,
-        desk: `Health & Medicine`,
-        author: `AP Health Desk`,
-        feedEndpoint: `apnews.com/climate-and-environment`,
-        articlePath: `apnews.com/article/prostate-cancer-psa-american-cancer-society-fb0d5a89f0e91930a9f007562f4a3cdf`,
-        context: `Health reporters note an unusually early start to the 2026–2027 U.S. influenza season concentrated in Southern and Western states. Simultaneously, recent measles clusters threaten the elimination status of both the United States and Mexico.`,
-        summaryPoints: [
-          `Influenza activity is climbing ahead of typical seasonal curves across Southern and Western clinics.`,
-          `Epidemiologists warn recent domestic outbreaks could cost both the U.S. and Mexico their measles-free designation.`,
-          `In parallel clinical updates, the FDA added a rare vision-loss warning to GLP-1 drugs and medical societies issued major updates to prostate cancer and menopause guidelines.`
-        ]
-      },
-      {
-        id: `usa-nvidia-huang`,
-        category: `usa`,
-        intensity: `high`,
-        publishedUtc: `2026-11-13 14:15 UTC`,
-        recencyScore: 202611131415,
-        relativeTime: `3 hours ago`,
-        headline: `What Jensen Huang's departure from Nvidia could mean for the AI industry and Washington`,
-        deck: `Chipmaker succession raises strategic questions for hyperscale computing, export policy, and federal semiconductor alliances.`,
-        outlet: `Associated Press`,
-        desk: `Business & AI`,
-        author: `AP Business & Tech`,
-        feedEndpoint: `apnews.com/hub/tariffs`,
-        articlePath: `apnews.com/hub/artificial-intelligence`,
-        context: `AP Business and Technology analysis examines the market and policy ripple effects of Jensen Huang's exit from Nvidia, weighing how leadership turnover at the dominant AI chip designer may reshape capital spending and Washington lobbying.`,
-        summaryPoints: [
-          `Evaluates long-term continuity across GPU roadmaps and data-center supply chains for AI labs.`,
-          `Separate AP Tech reporting notes potential collateral political fallout in Washington linked to disclosures about an extramarital affair.`,
-          `Investors and semiconductor partners are monitoring governance transition timelines.`
-        ]
-      },
-      {
-        id: `world-cop31-climate`,
-        category: `world`,
-        intensity: `high`,
-        publishedUtc: `2026-11-13 15:00 UTC`,
-        recencyScore: 202611131500,
-        relativeTime: `2 hours ago`,
-        headline: `World leaders urge faster action at UN climate talks (COP31) over inadequate global response`,
-        deck: `Frontline nations demand urgent acceleration as negotiators debate electrification targets and critical-mineral mining safeguards.`,
-        outlet: `Associated Press`,
-        desk: `World & Climate`,
-        author: `AP Climate Desk`,
-        feedEndpoint: `apnews.com/climate-and-environment`,
-        articlePath: `apnews.com/article/climate-change-cop31-turkey-un-conference-056ff011b2e6f324c2cd089862c13824`,
-        context: `At the COP31 UN climate conference in Turkey, leaders from countries already severely impacted by warming warned that current national pledges fall far short of what is required to limit catastrophic damage.`,
-        summaryPoints: [
-          `Vulnerable states pressed major emitters for faster emissions cuts and adaptation finance.`,
-          `Summit working groups are advancing global electrification goals while Indigenous and civil-society coalitions demand strict mining safeguards.`,
-          `Follows scientific warnings linking hotter, more frequent wildfires to drinking water contamination risks.`
-        ]
-      },
-      {
-        id: `world-cuba-crisis`,
-        category: `world`,
-        intensity: `high`,
-        publishedUtc: `2026-11-13 14:45 UTC`,
-        recencyScore: 202611131445,
-        relativeTime: `2 hours ago`,
-        headline: `In Cuba, a month's pension barely buys a carton of eggs as charity kitchens feed growing numbers`,
-        deck: `Deepening economic hardship in Havana pushes pensioners and families toward neighborhood soup kitchens and pantries.`,
-        outlet: `Associated Press`,
-        desk: `Latin America`,
-        author: `AP Havana Bureau`,
-        feedEndpoint: `apnews.com/hub/iran (World Top Stories)`,
-        articlePath: `apnews.com/article/cuba-food-insecurity-soup-kitchens-pantry-crisis-df4ab742dff562680946644847341db0`,
-        context: `Severe inflation and supply shortages in Cuba have eroded monthly pensions to the point where basic protein staples are out of reach for retirees, turning community- and church-run kitchens in Havana into critical lifelines.`,
-        summaryPoints: [
-          `A single monthly pension check now barely covers one carton of eggs in Havana markets.`,
-          `Charity-run kitchens report surging daily meal demand from elderly residents and low-income households.`,
-          `Economic pressures continue to compound shortages of food, fuel, and essential goods.`
-        ]
-      },
-      {
-        id: `sci-hubble-roman`,
+        id: `sd-mit-crystals`,
         category: `science`,
         intensity: `high`,
-        publishedUtc: `2026-11-12 18:00 UTC`,
-        recencyScore: 202611121800,
-        relativeTime: `1 day ago`,
-        headline: `NASA's Hubble offers cosmic sampler of benchmark targets for Roman Space Telescope`,
-        deck: `New deep-field calibration mosaic prepares the Nancy Grace Roman mission alongside Chandra outburst and LISA exoplanet studies.`,
-        outlet: `NASA Science`,
-        desk: `Astrophysics`,
-        author: `NASA Hubble & Astrophysics Teams`,
-        feedEndpoint: `nasa.gov/news-release/feed/`,
-        articlePath: `science.nasa.gov/missions/hubble/nasas-hubble-offers-cosmic-sampler-of-targets-for-roman/`,
-        context: `NASA's Hubble Space Telescope has compiled a reference sampler of galaxies and stellar fields tailored for the upcoming Nancy Grace Roman Space Telescope, bridging high-resolution imaging with Roman's wide-field infrared survey capabilities.`,
-        summaryPoints: [
-          `Provides curated calibration targets so Roman can rapidly map dark energy, galaxy evolution, and cosmic structure.`,
-          `Accompanied by NASA Chandra X-ray Observatory findings pinpointing the origin of a star's mysterious outbursts.`,
-          `Companion NASA LISA research demonstrates how space-based gravitational wave detectors can identify previously unseen exoplanet worlds.`
+        intensityScore: 78,
+        timestamp: `2026-11-04 01:22:48 UTC`,
+        source: `ScienceDaily (sciencedaily.com)`,
+        feedPath: `sciencedaily.com/rss/top/science.xml`,
+        headline: `MIT Scientists Break 20-Year Crystallography Rule to Unlock Never-Before-Seen Crystal Structures`,
+        summary: `A materials breakthrough overturns a longstanding structural constraint, opening novel design space for electronics and catalysis.`,
+        context: `Reported via ScienceDaily's physical sciences RSS feed, MIT researchers bypassed a two-decade empirical barrier governing how crystal lattices assemble. The discovery complements condensed-matter and nanomaterials coverage syndicated through Phys.org's ads-free XML feeds.`,
+        bullets: [
+          `Challenges a 20-year theoretical boundary in solid-state crystal formation.`,
+          `Potential downstream applications span semiconductors, photonics, and quantum materials.`
         ]
       },
       {
-        id: `sci-esa-hera`,
-        category: `science`,
+        id: `ap-measles-health`,
+        category: `usa`,
         intensity: `high`,
-        publishedUtc: `2026-11-13 12:10 UTC`,
-        recencyScore: 202611131210,
-        relativeTime: `5 hours ago`,
-        headline: `Europe's Hera spacecraft begins close inspections of asteroid rammed by NASA's DART test`,
-        deck: `Planetary defense probe arrives to survey crater geometry, ejecta, and orbital deflection dynamics from the 2022 impact.`,
-        outlet: `Associated Press / ESA`,
-        desk: `Space & Planetary Defense`,
-        author: `AP Science Desk`,
-        feedEndpoint: `apnews.com/hub/space`,
-        articlePath: `apnews.com/article/climate-cop31-un-turkey-9c3945f36e4445dd4427f490c40e4bf3`,
-        context: `The European Space Agency's Hera spacecraft has initiated close-range scientific operations around the asteroid moonlet Dimorphos, four years after NASA intentionally crashed the DART spacecraft into it in 2022 to test kinetic asteroid deflection.`,
-        summaryPoints: [
-          `Hera is mapping the impact crater, surface boulder distribution, and interior mass properties left by DART.`,
-          `Data will turn the 2022 kinetic impact demonstration into a calibrated, repeatable planetary defense technique.`,
-          `Follows orbital progress by SpaceX's Starship, which reached orbit despite a booster water landing preventing a double catch.`
+        intensityScore: 77,
+        timestamp: `2026-11-13 12:05:00 UTC`,
+        source: `AP News Health (apnews.com)`,
+        feedPath: `apnews.com/hub/health`,
+        headline: `US and Mexico Risk Losing Measles-Free Status; FDA Adds Vision Warning to GLP-1 Drugs`,
+        summary: `Cross-border measles outbreaks threaten North American elimination status, while regulators update safety guidance on popular metabolic therapies.`,
+        context: `Public health headlines on November 13 reflect simultaneous regulatory and infectious-disease pressures. Sustained measles clusters could end the US and Mexico's measles-free designation, while the FDA appended a rare vision-loss warning to widely prescribed GLP-1 medications and federal agencies announced new research funding for ibogaine.`,
+        bullets: [
+          `Both the US and Mexico face potential revocation of measles-free designation due to recent outbreaks.`,
+          `FDA issued a rare vision-loss label warning for GLP-1 drugs alongside updated prostate cancer and menopause guidelines.`
         ]
       },
       {
-        id: `az-hegseth-delegation`,
+        id: `ap-wildfires-water-az`,
         category: `arizona`,
-        intensity: `standard`,
-        publishedUtc: `2026-11-13 16:08 UTC`,
-        recencyScore: 202611131608,
-        relativeTime: `1 hour ago`,
-        headline: `How Arizona's congressional delegation stands on Defense Secretary Hegseth impeachment plans`,
-        deck: `After the U.S. House narrowly defeated a removal motion this week, Arizona Democrats signal willingness to revisit action next year.`,
-        outlet: `KJZZ 91.5 FM`,
-        desk: `Arizona Politics`,
-        author: `Camryn Sanchez`,
-        feedEndpoint: `kjzz.org/politics`,
-        articlePath: `kjzz.org/politics/2026-11-13/how-arizonas-delegation-stands-on-hegseth-impeachment-plans`,
-        context: `Following a narrow House vote that killed an impeachment motion against Defense Secretary Pete Hegseth, KJZZ Politics surveyed where Arizona's federal lawmakers stand heading into the incoming 2027 congressional session.`,
-        summaryPoints: [
-          `The U.S. House narrowly blocked the immediate impeachment motion earlier this week.`,
-          `Arizona's Democratic delegation members indicate they are prepared to support ouster proceedings if articles resurface next year.`,
-          `Reflects shifting Capitol Hill leverage ahead of the post-midterm congressional transition.`
+        intensity: `high`,
+        intensityScore: 76,
+        timestamp: `2026-11-13 11:30:00 UTC`,
+        source: `AP News Climate & Environment (apnews.com)`,
+        feedPath: `apnews.com/climate-and-environment`,
+        headline: `Bigger, More-Frequent Wildfires Threaten Drinking Water Supplies Across Western Watersheds`,
+        summary: `Post-fire runoff and watershed contamination are straining municipal water treatment infrastructure across fire-prone US regions.`,
+        context: `AP Climate reporting highlights how larger, hotter wildfires degrade reservoir quality long after flames are contained, introducing ash, heavy metals, and treatment-resistant organics into drinking water supplies. For arid Western and Southwestern basins like Arizona's watersheds, watershed resilience is a critical municipal priority.`,
+        bullets: [
+          `Larger and more frequent fires elevate sediment and chemical contamination risks in municipal intakes.`,
+          `Utilities face higher filtration costs and long-term watershed rehabilitation timelines.`
         ]
       },
       {
-        id: `az-gallego-childcare`,
-        category: `arizona`,
-        intensity: `standard`,
-        publishedUtc: `2026-11-13 15:05 UTC`,
-        recencyScore: 202611131505,
-        relativeTime: `2 hours ago`,
-        headline: `Sen. Gallego points to universal childcare as top priority heading into next Congress`,
-        deck: `As Democrats prepare to assume House and Senate control, Arizona's senator emphasizes household affordability for working families.`,
-        outlet: `KJZZ 91.5 FM`,
-        desk: `Arizona Politics`,
-        author: `Wayne Schutsky`,
-        feedEndpoint: `kjzz.org/politics`,
-        articlePath: `kjzz.org/politics/2026-11-13/gallego-points-to-universal-childcare-as-top-priority-heading-into-next-congress`,
-        context: `Speaking after the 2026 midterm elections handed congressional majorities to Democrats, Arizona Sen. Ruben Gallego outlined affordability legislation focused on lowering childcare costs for working parents.`,
-        summaryPoints: [
-          `Gallego identified universal childcare as a flagship legislative goal for the incoming Democratic House and Senate majorities.`,
-          `Frames cost-of-living relief for working families as central to post-midterm governance.`,
-          `Aligns with broader national debate over household economic strain following midterm shifts.`
-        ]
-      },
-      {
-        id: `usa-midterm-policy`,
-        category: `usa`,
-        intensity: `standard`,
-        publishedUtc: `2026-11-13 15:10 UTC`,
-        recencyScore: 202611131510,
-        relativeTime: `2 hours ago`,
-        headline: `GOP scores rare Maine flip amid midterm shifts; states appeal mail-voting ruling as Medicaid deadline delays`,
-        deck: `Post-election policy developments span 2028 ballot litigation, Head Start pay freezes, and a 6-month Medicaid work-rule reprieve.`,
-        outlet: `Associated Press / NPR`,
-        desk: `U.S. Politics & Policy`,
-        author: `Hansi Lo Wang & AP Politics`,
-        feedEndpoint: `apnews.com/hub/elections & kjzz.org/npr-top-stories`,
-        articlePath: `kjzz.org/npr-top-stories/2026-11-13/gop-state-officials-push-to-revive-trumps-mail-voting-restrictions-for-2028-election`,
-        context: `Even as the broader 2026 midterm landscape favored Democrats, Republicans achieved a notable blue-to-red flip in Maine. Meanwhile, federal and state policy desks report movement on voting litigation, early-childhood funding, and healthcare administration.`,
-        summaryPoints: [
-          `Republican state officials appealed a court injunction blocking the Postal Service from enforcing revised mail-in ballot rules for 2028.`,
-          `The Trump administration canceled a mandatory pay hike for Head Start teachers while granting states an extra 6 months before enforcing Medicaid work-requirement removals.`,
-          `AP Fact Focus debunked limited claims of rigged elections alongside altered video clips circulating online.`
-        ]
-      },
-      {
-        id: `usa-wildfires-water`,
-        category: `usa`,
-        intensity: `standard`,
-        publishedUtc: `2026-11-13 13:20 UTC`,
-        recencyScore: 202611131320,
-        relativeTime: `4 hours ago`,
-        headline: `Bigger and more-frequent wildfires threaten municipal drinking water supplies across the U.S.`,
-        deck: `Burn-scar runoff and ash contamination strain treatment facilities from Western watersheds to regional reservoirs.`,
-        outlet: `Associated Press`,
-        desk: `Climate & Environment`,
-        author: `AP Climate Desk`,
-        feedEndpoint: `apnews.com/climate-and-environment`,
-        articlePath: `apnews.com/article/wildfires-drinking-water-contamination-7b99f1b2657c4b9d6ac3d6e07dcf8cbc`,
-        context: `AP environmental reporting documents how larger, higher-intensity wildfires strip stabilizing vegetation from forested watersheds, sending ash, heavy metals, and excess sediment into drinking water intakes during subsequent storms.`,
-        summaryPoints: [
-          `Post-fire debris flows complicate filtration and drive up municipal treatment costs.`,
-          `Water districts across Western and fire-prone states are investing in emergency intake bypasses and watershed restoration.`,
-          `Companion AP reporting noted Family Dollar agreed to pay $63 million to settle overcharging allegations and Indiana schools expanded workplace learning.`
-        ]
-      },
-      {
-        id: `usa-ss-united-states`,
-        category: `usa`,
-        intensity: `standard`,
-        publishedUtc: `2026-11-13 11:45 UTC`,
-        recencyScore: 202611131145,
-        relativeTime: `5 hours ago`,
-        headline: `Historic ocean liner SS United States is sunk off Florida's coast to form an artificial reef`,
-        deck: `Decades-long preservation debate ends as the record-holding 1950s superliner descends off the Gulf Coast.`,
-        outlet: `Associated Press`,
-        desk: `Beyond the Headlines`,
-        author: `AP Features Desk`,
-        feedEndpoint: `apnews.com/hub/space (Features)`,
-        articlePath: `apnews.com/article/ss-united-states-ocean-liner-artificial-reef-88773c4030b0e2e12f3d63f5426ad285`,
-        context: `After a long farewell and years docked in Philadelphia, the historic passenger liner SS United States has been scuttled off the Florida coast to serve as a marine habitat and diving reef.`,
-        summaryPoints: [
-          `Marks the final chapter for the famed transatlantic liner built during the mid-century golden age of sea travel.`,
-          `Joins AP Beyond the Headlines dispatches including a Detroit bus driver picking up two horses and riders, and a century-old Beirut falafel family shop.`
-        ]
-      },
-      {
-        id: `world-pope-leo-peru`,
+        id: `reuters-dnr-isa-2026`,
         category: `world`,
         intensity: `standard`,
-        publishedUtc: `2026-11-13 14:00 UTC`,
-        recencyScore: 202611131400,
-        relativeTime: `3 hours ago`,
-        headline: `Pope Leo XIV denounces 'machismo' and demands women be protected during emotional return to Peru`,
-        deck: `Chiclayo welcomes back its former bishop as the pontiff calls for concrete social and legal protections for women.`,
-        outlet: `Associated Press`,
-        desk: `Religion & Latin America`,
-        author: `AP Vatican & Peru Bureaus`,
-        feedEndpoint: `apnews.com/newsletters?id=World+of+Faith`,
-        articlePath: `apnews.com/hub/recipes`,
-        context: `Returning to Chiclayo, the Peruvian city that claims him as its own, Pope Leo XIV spoke of his "joy" at returning home while delivering a forceful denunciation of violence and machismo against women.`,
-        summaryPoints: [
-          `Thousands gathered in Chiclayo to greet their former shepherd during his pastoral homecoming.`,
-          `Pope Leo XIV urged civic and religious leaders to actively protect women from abuse and systemic discrimination.`
+        intensityScore: 68,
+        timestamp: `2026-11-12 09:00:00 UTC`,
+        source: `Reuters Institute & ISA (reutersinstitute.politics.ox.ac.uk · isa-world.com)`,
+        feedPath: `reutersinstitute.politics.ox.ac.uk/digital-news-report/2026`,
+        headline: `Digital News Report 2026: Social & Video Surpass 54% as Global Growth Holds at 3.1%`,
+        summary: `Social media and video networks became the #1 global news source (54%) for the first time in 2026, while IMF forecasts 3.1% GDP growth and 4.7% inflation.`,
+        context: `The 15th annual Reuters Institute Digital News Report documents a structural shift in audience habits: TV news fell 13 percentage points and publisher websites/apps fell 12 points since 2020. Meanwhile, ISA's November macro briefing notes uneven global expansion (3.1% in 2026, 3.4% in 2027) and difficult winter energy conditions for Ukraine.`,
+        bullets: [
+          `54% of global audiences now rely on social media and video networks for news; 29% in Canada and 21% in the US pay individual news creators.`,
+          `IMF projects 4.7% global headline inflation in 2026 easing to 4.1% in 2027, complicating central bank policy.`,
+          `European allies and Ukraine face heightened winter energy-security stakes amid shifting US diplomatic posture.`
         ]
       },
       {
-        id: `world-hockey-visas-pochettino`,
-        category: `world`,
+        id: `ap-midterms-bridge`,
+        category: `usa`,
         intensity: `standard`,
-        publishedUtc: `2026-11-13 12:50 UTC`,
-        recencyScore: 202611131250,
-        relativeTime: `4 hours ago`,
-        headline: `Russia demands world junior hockey tournament moved or canceled; U.S. visas sideline Miss Universe entrants`,
-        deck: `Geopolitical travel barriers reshape international sport and pageants as Pochettino exits U.S. soccer post for Man United.`,
-        outlet: `Associated Press`,
-        desk: `World & Sports`,
-        author: `AP International Sports & World`,
-        feedEndpoint: `apnews.com/hub/nfl`,
-        articlePath: `apnews.com/hub/nfl`,
-        context: `International competition continues to intersect with diplomatic restrictions: barred from competing in Canada, Russian hockey officials demanded the world junior tournament be relocated or canceled, while U.S. visa restrictions forced several African contestants out of Miss Universe.`,
-        summaryPoints: [
-          `Russian federation opposes holding the world junior hockey championship in Canada under current exclusion rules.`,
-          `In soccer, Mauricio Pochettino tearfully stepped down from the U.S. men's national team role to take charge of Manchester United.`,
-          `Meanwhile in Geneva, a Romanov sapphire bracelet fetched $4.9 million at auction.`
+        intensityScore: 66,
+        timestamp: `2026-11-13 10:40:00 UTC`,
+        source: `AP News Politics & U.S. (apnews.com)`,
+        feedPath: `apnews.com/hub/elections`,
+        headline: `Maine Flip Marks Midterm Cycle as Cargo Ship Strikes NJ–Philadelphia Bridge`,
+        summary: `Republicans captured a rare blue-to-red flip in Maine despite broad Democratic midterm gains, while a bridge strike disrupted Delaware River traffic.`,
+        context: `AP Politics and U.S. desks tracked major domestic developments following the November 2026 midterm elections, alongside AP Fact Focus debunks of false rigged-election narratives and altered political videos. Separately, emergency crews responded to major traffic backups after a cargo vessel struck a bridge linking New Jersey and Philadelphia.`,
+        bullets: [
+          `Midterm results heavily favored Democrats overall while delivering a rare GOP flip in Maine.`,
+          `Cargo ship collision with NJ–Philadelphia bridge triggered extensive regional traffic diversions.`,
+          `Earlier 2026 US Supreme Court ruling limiting emergency tariff powers continues shaping trade policy.`
         ]
       },
       {
-        id: `sci-nasa-escapade-voyager`,
+        id: `sd-bio-evolution`,
         category: `science`,
         intensity: `standard`,
-        publishedUtc: `2026-11-10 16:00 UTC`,
-        recencyScore: 202611101600,
-        relativeTime: `3 days ago`,
-        headline: `NASA's ESCAPADE completes powered Earth flybys en route to Mars; Voyager 1 nears One-Light-Day mark`,
-        deck: `Twin heliophysics orbiters depart Earth vicinity as NASA celebrates Voyager 1's historic deep-space distance milestone.`,
-        outlet: `NASA Science`,
-        desk: `Heliophysics & Deep Space`,
-        author: `NASA Communications`,
-        feedEndpoint: `nasa.gov/feed/`,
-        articlePath: `science.nasa.gov/science-research/heliophysics/nasas-escapade-completes-powered-earth-flybys-now-en-route-to-mars/`,
-        context: `NASA's ESCAPADE (Escape and Plasma Acceleration and Dynamics Explorers) mission completed powered Earth flybys and is now on an interplanetary trajectory toward Mars, while Voyager 1 approaches a signal round-trip milestone of one full light-day from Earth.`,
-        summaryPoints: [
-          `ESCAPADE will investigate how solar wind strips atmosphere from Mars using twin coordinated spacecraft.`,
-          `NASA invited media and the public to join Voyager 1 One-Light-Day commemorative activities.`,
-          `Earth Observatory also released new satellite analysis showing a global rebound for coastal mangrove ecosystems.`
+        intensityScore: 62,
+        timestamp: `2026-11-12 02:55:29 UTC`,
+        source: `ScienceDaily Biology & Earth (sciencedaily.com)`,
+        feedPath: `sciencedaily.com/rss/plants_animals/biology.xml`,
+        headline: `Fossil Treasure Map, Neck Evolution, and Hair Growth Signaling Highlight November Biology Releases`,
+        summary: `Three peer-reviewed studies map Earth's hidden prehistoric fossils, revise vertebrate neck evolution theory, and decode hair follicle orientation.`,
+        context: `Updated hourly via ScienceDaily's topical XML feeds, November 2026 life-science dispatches highlight new predictive mapping for unexplored fossil beds (Nov 12), biomechanical revisions of why necks evolved (Nov 8), and cellular patterning signals explaining how hair knows where to grow (Nov 9).`,
+        bullets: [
+          `Predictive geological modeling identifies prime under-explored regions for prehistoric fossil preservation.`,
+          `Developmental biology study clarifies spatial signaling mechanisms behind hair follicle placement.`
         ]
       },
       {
-        id: `sci-sciencedaily-crows-mit`,
+        id: `nasa-arxiv-feeds`,
         category: `science`,
         intensity: `standard`,
-        publishedUtc: `2026-11-11 08:50 UTC`,
-        recencyScore: 202611110850,
-        relativeTime: `2 days ago`,
-        headline: `Crows make decisions twice as fast as humans; MIT breaks 20-year crystallography rule`,
-        deck: `Highlights across ScienceDaily, Phys.org, and arXiv daily preprints spanning cognition, materials science, and HPV therapeutics.`,
-        outlet: `ScienceDaily / Phys.org / arXiv`,
-        desk: `Research Syndication`,
-        author: `ScienceDaily & arXiv Daily Feeds`,
-        feedEndpoint: `sciencedaily.com/rss/top/science.xml & rss.arxiv.org/rss/cs.ai+q-bio.NC`,
-        articlePath: `sciencedaily.com/releases/2026/11/261111005850.htm`,
-        context: `Across peer-reviewed summaries and daily preprint feeds, researchers documented rapid avian decision-making in crows, novel crystal synthesis at MIT breaking a two-decade rule, and experimental cancer-fighting chewing gum slashing oral HPV levels by up to 93%.`,
-        summaryPoints: [
-          `Crows demonstrated cognitive decision latencies half as long as human benchmarks in controlled trials.`,
-          `MIT materials scientists unlocked previously unseen crystal structures by bypassing a 20-year synthesis constraint.`,
-          `arXiv's midnight EST RSS 2.0 / ATOM feeds and Phys.org's Science X streams continue supplying up to 2,000 daily AI, quantum, and bio-medicine preprints.`
+        intensityScore: 58,
+        timestamp: `2026-11-13 05:00:00 UTC`,
+        source: `NASA & arXiv Syndication (nasa.gov · info.arxiv.org)`,
+        feedPath: `rss.arxiv.org/rss/cs.ai+q-bio.NC · nasa.gov/feed`,
+        headline: `NASA Mission Feeds & arXiv Midnight Preprint Pipes Power Automated Science Aggregation`,
+        summary: `Daily Atom/RSS 2.0 endpoints unify NASA Image of the Day, ISS operations, and combined arXiv AI + Neuroscience preprints.`,
+        context: `Designed as the backbone of static research dashboards, arXiv updates RSS 2.0 and Atom feeds daily at midnight EST and supports multi-category queries (e.g., cs.ai+q-bio.NC up to 2,000 results). NASA provides parallel XML feeds across News Releases, Aeronautics, Technology, and International Space Station coverage.`,
+        bullets: [
+          `arXiv supports whole-archive, single-class (math.QA), and multi-class (+ syntax) RSS & Atom endpoints.`,
+          `NASA RSS covers Image of the Day, Technology, Aeronautics, and Space Station updates.`
         ]
       }
     ];
 
+    const RACHEL_GALLERY = [
+      {
+        id: `rc-desert-roadtrip`,
+        category: `roadtrip`,
+        tag: `ROAD TRIP SERIES · 12 POSTS`,
+        date: `2026-11-10`,
+        title: `Southwest Golden Hour — Open Highway Portfolio`,
+        res: `4K VECTOR PLATE · 3840×2400`,
+        assetHook: `assets/gallery/rachel-cook-roadtrip-01.webp`,
+        sourceRef: `TikTok @rachelc00k ("Road trip" playlist — 12 posts) · Pinterest Modeling`,
+        description: `Inspired by @rachelc00k's active "Road trip" TikTok playlist (12 curated dispatches) and open-road visual storytelling, pairing desert horizon tones with natural-light editorial framing.`,
+        plateType: `desert`
+      },
+      {
+        id: `rc-studio-editorial`,
+        category: `modeling`,
+        tag: `EDITORIAL MODELING`,
+        date: `2026-11-08`,
+        title: `Monochrome Keylight — Studio Lookbook Frame`,
+        res: `4K VECTOR PLATE · 3840×2400`,
+        assetHook: `assets/gallery/rachel-cook-studio-02.webp`,
+        sourceRef: `Pinterest "Rachel Cook Modeling" · Linktr.ee/rachelc00k`,
+        description: `Clean architectural studio composition reflecting Rachel Cook's core modeling portfolio hubs linked via Linktr.ee/rachelc00k and curated Pinterest lookbooks.`,
+        plateType: `studio`
+      },
+      {
+        id: `rc-pacific-coast`,
+        category: `roadtrip`,
+        tag: `COASTAL EXPEDITION`,
+        date: `2026-11-05`,
+        title: `Pacific Ridge & Coastal Drift — Travel Series`,
+        res: `4K VECTOR PLATE · 3840×2400`,
+        assetHook: `assets/gallery/rachel-cook-coast-03.webp`,
+        sourceRef: `TikTok @rachelc00k (521.8K Followers · 3.6M Likes)`,
+        description: `Highlighting the travel-diary cadence that drives @rachelc00k's 3.6M TikTok likes across road-trip reels, coastal stopovers, and behind-the-scenes location shoots.`,
+        plateType: `coast`
+      },
+      {
+        id: `rc-farm-homestead`,
+        category: `farm`,
+        tag: `FARMER IN TRAINING & SHORT DRAMAS`,
+        date: `2026-11-02`,
+        title: `Homestead & Short-Drama Field Notes`,
+        res: `4K VECTOR PLATE · 3840×2400`,
+        assetHook: `assets/gallery/rachel-cook-farm-04.webp`,
+        sourceRef: `TikTok @rachelc00k Bio ("Model, roadtripper, & farmer in training") · Short dramas`,
+        description: `Capturing the "farmer in training" chapter featured in @rachelc00k's profile alongside her expanding "Short dramas" video tab and rural lifestyle updates.`,
+        plateType: `farm`
+      }
+    ];
+
+    /* Persistent application state */
     const appState = {
       category: `all`,
       intensity: `all`,
+      sort: `urgency`,
       search: ``,
-      sort: `intensity`,
-      onlySaved: false,
-      expandedIds: [`usa-faa-ground-stop`],
+      galleryFilter: `all`,
+      expandedIds: [`who-tb-2026`, `ap-faa-groundstop-az`],
       savedIds: [],
-      lastUpdatedUtc: BASELINE_UTC,
-      syncCount: 0
+      lastSyncUtc: `2026-11-13 18:42:10 UTC`,
+      syncEpochMs: Date.UTC(2026, 10, 13, 18, 42, 10)
     };
 
-    let toastTimer = null;
+    let intensityChartInstance = null;
 
-    function getFilteredStories() {
-      const q = appState.search.trim().toLowerCase();
-      return STORIES.filter(function(item) {
-        if (appState.category !== `all` && item.category !== appState.category) return false;
-        if (appState.intensity !== `all` && item.intensity !== appState.intensity) return false;
-        if (appState.onlySaved && !appState.savedIds.includes(item.id)) return false;
-        if (q) {
-          const haystack = [
-            item.headline,
-            item.deck,
-            item.outlet,
-            item.desk,
-            item.author,
-            item.context,
-            item.summaryPoints.join(` `),
-            CATEGORY_META[item.category].label
-          ].join(` `).toLowerCase();
-          if (!haystack.includes(q)) return false;
+    function buildPlateSvg(type) {
+      if (type === `desert`) {
+        return `<svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="gDesertSky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="var(--plate-desert-sky)"/>
+              <stop offset="100%" stop-color="var(--background)"/>
+            </linearGradient>
+          </defs>
+          <rect width="800" height="500" fill="url(#gDesertSky)"/>
+          <circle cx="570" cy="165" r="78" fill="var(--plate-desert-sun)" opacity="0.92"/>
+          <path d="M0 320 Q 190 250 380 305 T 800 280 L 800 500 L 0 500 Z" fill="var(--plate-desert-ridge)" opacity="0.85"/>
+          <path d="M0 385 Q 260 335 510 380 T 800 365 L 800 500 L 0 500 Z" fill="var(--plate-desert-dusk)"/>
+          <line x1="395" y1="382" x2="365" y2="500" stroke="var(--plate-desert-sun)" stroke-width="3" stroke-dasharray="12 10"/>
+          <rect x="34" y="34" width="732" height="432" fill="none" stroke="var(--on-surface)" stroke-width="1" opacity="0.35"/>
+          <line x1="34" y1="250" x2="766" y2="250" stroke="var(--on-surface)" stroke-width="0.75" stroke-dasharray="4 6" opacity="0.25"/>
+        </svg>`;
+      }
+      if (type === `studio`) {
+        return `<svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <rect width="800" height="500" fill="var(--plate-studio-backdrop)"/>
+          <polygon points="180,0 620,0 520,500 280,500" fill="var(--plate-studio-light)" opacity="0.75"/>
+          <rect x="255" y="75" width="290" height="350" fill="none" stroke="var(--plate-studio-frame)" stroke-width="2"/>
+          <circle cx="400" cy="210" r="64" fill="var(--primary-container)" opacity="0.85"/>
+          <path d="M295 425 C 310 315, 490 315, 505 425 Z" fill="var(--secondary)"/>
+          <line x1="34" y1="34" x2="766" y2="34" stroke="var(--plate-studio-frame)" stroke-width="1" opacity="0.35"/>
+          <line x1="34" y1="466" x2="766" y2="466" stroke="var(--plate-studio-frame)" stroke-width="1" opacity="0.35"/>
+        </svg>`;
+      }
+      if (type === `coast`) {
+        return `<svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <rect width="800" height="500" fill="var(--plate-coast-sky)"/>
+          <circle cx="215" cy="140" r="56" fill="var(--plate-coast-foam)" opacity="0.95"/>
+          <rect x="0" y="275" width="800" height="225" fill="var(--plate-coast-water)"/>
+          <path d="M0 320 Q 140 295 280 320 T 560 320 T 800 320" fill="none" stroke="var(--plate-coast-foam)" stroke-width="3" opacity="0.7"/>
+          <path d="M0 370 Q 160 345 320 370 T 640 370 T 800 370" fill="none" stroke="var(--plate-coast-foam)" stroke-width="2" opacity="0.45"/>
+          <polygon points="500,275 800,195 800,275" fill="var(--plate-studio-frame)" opacity="0.78"/>
+          <rect x="34" y="34" width="732" height="432" fill="none" stroke="var(--plate-coast-foam)" stroke-width="1" opacity="0.4"/>
+        </svg>`;
+      }
+      return `<svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <rect width="800" height="500" fill="var(--surface-container)"/>
+        <path d="M0 290 Q 220 235 450 285 T 800 265 L 800 500 L 0 500 Z" fill="var(--plate-farm-sage)"/>
+        <path d="M0 350 Q 260 315 520 355 T 800 340 L 800 500 L 0 500 Z" fill="var(--plate-farm-meadow)"/>
+        <rect x="530" y="195" width="115" height="90" fill="var(--plate-farm-earth)"/>
+        <polygon points="518,195 587,145 657,195" fill="var(--primary-container)"/>
+        <circle cx="170" cy="135" r="48" fill="var(--primary-container)" opacity="0.9"/>
+        <rect x="34" y="34" width="732" height="432" fill="none" stroke="var(--on-surface)" stroke-width="1" opacity="0.3"/>
+      </svg>`;
+    }
+
+    function formatUtcString(dateObj) {
+      const pad = function(n) { return String(n).padStart(2, `0`); };
+      return `${dateObj.getUTCFullYear()}-${pad(dateObj.getUTCMonth() + 1)}-${pad(dateObj.getUTCDate())} ${pad(dateObj.getUTCHours())}:${pad(dateObj.getUTCMinutes())}:${pad(dateObj.getUTCSeconds())} UTC`;
+    }
+
+    function updateClocks() {
+      const clockEl = document.getElementById(`live-clock-utc`);
+      const ageEl = document.getElementById(`sync-age-label`);
+      const now = new Date();
+      if (clockEl) {
+        clockEl.textContent = `CLOCK: ${formatUtcString(now)}`;
+      }
+      if (ageEl) {
+        const diffSec = Math.max(0, Math.floor((Date.now() - appState.syncEpochMs) / 1000));
+        if (diffSec < 60) {
+          ageEl.textContent = `${diffSec}S AGO`;
+        } else {
+          const mins = Math.floor(diffSec / 60);
+          ageEl.textContent = `${mins}M AGO`;
         }
-        return true;
-      });
-    }
-
-    function sortStories(list) {
-      const copy = list.slice();
-      copy.sort(function(a, b) {
-        if (appState.sort === `intensity`) {
-          const diff = INTENSITY_META[b.intensity].rank - INTENSITY_META[a.intensity].rank;
-          if (diff !== 0) return diff;
-          return b.recencyScore - a.recencyScore;
-        }
-        if (appState.sort === `recency`) {
-          return b.recencyScore - a.recencyScore;
-        }
-        if (appState.sort === `category`) {
-          const catDiff = CATEGORY_META[a.category].order - CATEGORY_META[b.category].order;
-          if (catDiff !== 0) return catDiff;
-          return INTENSITY_META[b.intensity].rank - INTENSITY_META[a.intensity].rank;
-        }
-        return 0;
-      });
-      return copy;
-    }
-
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, `&amp;`)
-        .replace(/</g, `&lt;`)
-        .replace(/>/g, `&gt;`)
-        .replace(/"/g, `&quot;`)
-        .replace(/'/g, `&#39;`);
-    }
-
-    function renderKpis(visibleCount) {
-      const totalEl = document.getElementById(`kpi-total-count`);
-      const visibleSubEl = document.getElementById(`kpi-visible-sub`);
-      const critEl = document.getElementById(`kpi-critical-count`);
-      const highEl = document.getElementById(`kpi-high-count`);
-      const savedCountEl = document.getElementById(`saved-count`);
-
-      const criticalCount = STORIES.filter(function(s) { return s.intensity === `critical`; }).length;
-      const highCount = STORIES.filter(function(s) { return s.intensity === `high`; }).length;
-
-      if (totalEl) totalEl.textContent = String(STORIES.length);
-      if (visibleSubEl) visibleSubEl.textContent = `Showing ` + visibleCount + ` of ` + STORIES.length + ` stories`;
-      if (critEl) critEl.textContent = String(criticalCount);
-      if (highEl) highEl.textContent = String(highCount);
-      if (savedCountEl) savedCountEl.textContent = String(appState.savedIds.length);
-
-      const countAllEl = document.getElementById(`count-all`);
-      const countSciEl = document.getElementById(`count-science`);
-      const countAzEl = document.getElementById(`count-arizona`);
-      const countUsaEl = document.getElementById(`count-usa`);
-      const countWorldEl = document.getElementById(`count-world`);
-      if (countAllEl) countAllEl.textContent = String(STORIES.length);
-      if (countSciEl) countSciEl.textContent = String(STORIES.filter(function(s) { return s.category === `science`; }).length);
-      if (countAzEl) countAzEl.textContent = String(STORIES.filter(function(s) { return s.category === `arizona`; }).length);
-      if (countUsaEl) countUsaEl.textContent = String(STORIES.filter(function(s) { return s.category === `usa`; }).length);
-      if (countWorldEl) countWorldEl.textContent = String(STORIES.filter(function(s) { return s.category === `world`; }).length);
-
-      const cardAll = document.getElementById(`kpi-card-all`);
-      const cardCrit = document.getElementById(`kpi-card-critical`);
-      const cardHigh = document.getElementById(`kpi-card-high`);
-      if (cardAll) cardAll.classList.toggle(`is-active`, appState.intensity === `all`);
-      if (cardCrit) cardCrit.classList.toggle(`is-active`, appState.intensity === `critical`);
-      if (cardHigh) cardHigh.classList.toggle(`is-active`, appState.intensity === `high`);
-    }
-
-    function renderMatrix() {
-      const container = document.getElementById(`matrix-bars`);
-      if (!container) return;
-
-      const cats = [`science`, `arizona`, `usa`, `world`];
-      container.innerHTML = cats.map(function(cat) {
-        const subset = STORIES.filter(function(s) { return s.category === cat; });
-        const total = subset.length || 1;
-        const cCount = subset.filter(function(s) { return s.intensity === `critical`; }).length;
-        const hCount = subset.filter(function(s) { return s.intensity === `high`; }).length;
-        const sCount = subset.filter(function(s) { return s.intensity === `standard`; }).length;
-
-        const cPct = Math.round((cCount / total) * 100);
-        const hPct = Math.round((hCount / total) * 100);
-        const sPct = Math.max(0, 100 - cPct - hPct);
-        const activeClass = appState.category === cat ? ` is-active` : ``;
-
-        return `
-          <button type="button" class="matrix-cat-btn${activeClass}" onclick="setCategory('${cat}')" aria-label="Filter by ${CATEGORY_META[cat].label}: ${subset.length} stories">
-            <div class="matrix-cat-top">
-              <span>${CATEGORY_META[cat].label}</span>
-              <span>${subset.length} stories</span>
-            </div>
-            <div class="stacked-track" aria-hidden="true">
-              ${cCount > 0 ? `<div class="seg-critical" style="width:${cPct}%"></div>` : ``}
-              ${hCount > 0 ? `<div class="seg-high" style="width:${hPct}%"></div>` : ``}
-              ${sCount > 0 ? `<div class="seg-standard" style="width:${sPct}%"></div>` : ``}
-            </div>
-          </button>
-        `;
-      }).join(``);
-    }
-
-    function renderControlsState() {
-      const tabs = document.querySelectorAll(`#category-tablist .tab-btn`);
-      tabs.forEach(function(tab) {
-        const cat = tab.getAttribute(`data-category`);
-        tab.setAttribute(`aria-selected`, cat === appState.category ? `true` : `false`);
-      });
-
-      const urgBtns = document.querySelectorAll(`.urgency-toggle-group .urgency-pill`);
-      urgBtns.forEach(function(btn) {
-        const lvl = btn.getAttribute(`data-level`);
-        btn.setAttribute(`aria-pressed`, lvl === appState.intensity ? `true` : `false`);
-      });
-
-      const bookmarkFilterBtn = document.getElementById(`bookmark-filter-btn`);
-      if (bookmarkFilterBtn) {
-        bookmarkFilterBtn.setAttribute(`aria-pressed`, appState.onlySaved ? `true` : `false`);
       }
-
-      const searchEl = document.getElementById(`search-input`);
-      if (searchEl && searchEl.value !== appState.search) {
-        searchEl.value = appState.search;
-      }
-
-      const clearBtn = document.getElementById(`clear-search-btn`);
-      if (clearBtn) {
-        clearBtn.hidden = appState.search.trim().length === 0;
-      }
-
-      const sortEl = document.getElementById(`sort-select`);
-      if (sortEl) {
-        sortEl.value = appState.sort;
-      }
-
-      const utcEl = document.getElementById(`last-updated-utc`);
-      if (utcEl) {
-        utcEl.textContent = appState.lastUpdatedUtc;
-      }
-    }
-
-    function renderStories() {
-      const listEl = document.getElementById(`story-list`);
-      const statusEl = document.getElementById(`feed-status-line`);
-      if (!listEl) return;
-
-      const filtered = sortStories(getFilteredStories());
-      renderKpis(filtered.length);
-      renderMatrix();
-      renderControlsState();
-
-      const sortNames = {
-        intensity: `Situational Intensity`,
-        recency: `Recency (Newest First)`,
-        category: `Desk / Category`
-      };
-      if (statusEl) {
-        const catLabel = appState.category === `all` ? `All Desks` : CATEGORY_META[appState.category].label;
-        const intLabel = appState.intensity === `all` ? `All Intensities` : INTENSITY_META[appState.intensity].label;
-        statusEl.textContent = `Displaying ` + filtered.length + ` of ` + STORIES.length + ` stories · ` + catLabel + ` · ` + intLabel + ` · Sorted by ` + sortNames[appState.sort];
-      }
-
-      if (filtered.length === 0) {
-        listEl.innerHTML = `
-          <div class="empty-state">
-            <h3>No dispatches match these filters</h3>
-            <p>
-              ${appState.onlySaved && appState.savedIds.length === 0
-                ? `You have not saved any stories yet. Click Save on any story card to build a custom reading queue, or switch back to all stories.`
-                : `Your current category, urgency toggle, or keyword search returned zero matches across the November 13, 2026 feed snapshot.`}
-            </p>
-            <button type="button" class="btn btn-primary" onclick="resetAllFilters()">Reset All Filters</button>
-          </div>
-        `;
-        return;
-      }
-
-      listEl.innerHTML = filtered.map(function(story, idx) {
-        const num = String(idx + 1).padStart(2, `0`);
-        const isExpanded = appState.expandedIds.includes(story.id);
-        const isSaved = appState.savedIds.includes(story.id);
-        const catLabel = CATEGORY_META[story.category].label;
-        const intLabel = INTENSITY_META[story.intensity].label;
-        const badgeClass = story.intensity === `critical` ? `badge-critical` : (story.intensity === `high` ? `badge-high` : `badge-standard`);
-        const panelId = `context-panel-` + story.id;
-
-        const pointsHtml = story.summaryPoints.map(function(pt) {
-          return `<li>${escapeHtml(pt)}</li>`;
-        }).join(``);
-
-        return `
-          <article class="story-card${isExpanded ? ` is-expanded` : ``}" data-intensity="${story.intensity}" id="card-${story.id}">
-            <div class="story-summary-row">
-              <div class="story-main">
-                <div class="story-meta-top">
-                  <span class="index-num">${num}</span>
-                  <span class="intensity-badge ${badgeClass}">${escapeHtml(intLabel)}</span>
-                  <span class="category-chip">${escapeHtml(catLabel)}</span>
-                  <span class="story-timestamp">${escapeHtml(story.publishedUtc)} (${escapeHtml(story.relativeTime)})</span>
-                </div>
-
-                <button type="button" class="story-headline-btn" aria-expanded="${isExpanded ? `true` : `false`}" aria-controls="${panelId}" onclick="toggleStory('${story.id}')">
-                  ${escapeHtml(story.headline)}
-                </button>
-
-                <p class="story-deck">${escapeHtml(story.deck)}</p>
-
-                <div class="story-outlet-line">
-                  <span>Source: ${escapeHtml(story.outlet)}</span>
-                  <span aria-hidden="true">·</span>
-                  <span>Desk: ${escapeHtml(story.desk)}</span>
-                </div>
-              </div>
-
-              <div class="story-controls">
-                <button type="button" class="bookmark-btn" aria-pressed="${isSaved ? `true` : `false`}" aria-label="${isSaved ? `Remove bookmark` : `Save story`}" onclick="toggleBookmark('${story.id}')">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="${isSaved ? `currentColor` : `none`}" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                  </svg>
-                  <span>${isSaved ? `Saved` : `Save`}</span>
-                </button>
-
-                <button type="button" class="accordion-toggle" aria-expanded="${isExpanded ? `true` : `false`}" aria-controls="${panelId}" onclick="toggleStory('${story.id}')">
-                  <span>${isExpanded ? `Hide Context` : `Context &amp; Link`}</span>
-                  <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div class="story-context-panel" id="${panelId}" ${isExpanded ? `` : `hidden`}>
-              <div class="context-grid">
-                <div class="context-block">
-                  <h3 class="context-heading">Deeper Context &amp; Situational Briefing</h3>
-                  <p class="context-prose">${escapeHtml(story.context)}</p>
-
-                  <h3 class="context-heading" style="margin-top: var(--space-sm);">Key Summary Points</h3>
-                  <ul class="summary-points">
-                    ${pointsHtml}
-                  </ul>
-                </div>
-
-                <div class="context-block">
-                  <h3 class="context-heading">Source &amp; Feed Metadata</h3>
-                  <table class="metadata-table">
-                    <tbody>
-                      <tr>
-                        <th scope="row">Outlet</th>
-                        <td>${escapeHtml(story.outlet)}</td>
-                      </tr>
-                      <tr>
-                        <th scope="row">Desk / Beat</th>
-                        <td>${escapeHtml(story.desk)}</td>
-                      </tr>
-                      <tr>
-                        <th scope="row">Byline</th>
-                        <td>${escapeHtml(story.author)}</td>
-                      </tr>
-                      <tr>
-                        <th scope="row">Published</th>
-                        <td>${escapeHtml(story.publishedUtc)}</td>
-                      </tr>
-                      <tr>
-                        <th scope="row">RSS / Hub</th>
-                        <td><span class="mono-inline">${escapeHtml(story.feedEndpoint)}</span></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <div class="article-ref-bar">
-                <div class="article-ref-info">
-                  <span class="context-heading">Direct Article Destination (GitHub Pages Link Target)</span>
-                  <span class="article-ref-path">${escapeHtml(story.articlePath)}</span>
-                  <span class="article-ref-note">External navigation is disabled inside this preview; copy the canonical path above or wire directly in your GitHub Pages build.</span>
-                </div>
-                <button type="button" class="btn btn-secondary btn-compact" onclick="copyArticlePath('${story.id}', this)">
-                  Copy Article Path
-                </button>
-              </div>
-            </div>
-          </article>
-        `;
-      }).join(``);
     }
 
     function showToast(message) {
-      const el = document.getElementById(`action-toast`);
-      if (!el) return;
-      el.textContent = message;
-      el.hidden = false;
-      if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(function() {
-        el.hidden = true;
-      }, 2800);
+      const toast = document.getElementById(`status-toast`);
+      if (!toast) return;
+      toast.textContent = message;
+      toast.classList.add(`visible`);
+      setTimeout(function() {
+        toast.classList.remove(`visible`);
+      }, 2400);
     }
 
     async function persistState() {
-      if (!window.notebookAppApi || typeof window.notebookAppApi.setAppState !== `function`) return;
       try {
-        await window.notebookAppApi.setAppState({
-          category: appState.category,
-          intensity: appState.intensity,
-          search: appState.search,
-          sort: appState.sort,
-          onlySaved: appState.onlySaved,
-          expandedIds: appState.expandedIds,
-          savedIds: appState.savedIds,
-          lastUpdatedUtc: appState.lastUpdatedUtc,
-          syncCount: appState.syncCount
-        });
+        if (window.notebookAppApi && typeof window.notebookAppApi.setAppState === `function`) {
+          await window.notebookAppApi.setAppState({
+            category: appState.category,
+            intensity: appState.intensity,
+            sort: appState.sort,
+            search: appState.search,
+            galleryFilter: appState.galleryFilter,
+            expandedIds: appState.expandedIds,
+            savedIds: appState.savedIds,
+            lastSyncUtc: appState.lastSyncUtc,
+            syncEpochMs: appState.syncEpochMs
+          });
+        }
       } catch (err) {
-        // Ignore persistence errors in standalone preview
+        /* Fail silently in static GitHub Pages fallback */
       }
+    }
+
+    function triggerFeedSync() {
+      const btn = document.getElementById(`sync-btn`);
+      const statusText = document.getElementById(`live-status-text`);
+      const updatedEl = document.getElementById(`last-updated-utc`);
+      if (btn) btn.disabled = true;
+      if (statusText) statusText.textContent = `POLLING XML FEEDS…`;
+
+      setTimeout(function() {
+        const now = new Date();
+        appState.syncEpochMs = now.getTime();
+        appState.lastSyncUtc = formatUtcString(now);
+        if (updatedEl) updatedEl.textContent = appState.lastSyncUtc;
+        if (statusText) statusText.textContent = `LIVE WIRE ACTIVE`;
+        if (btn) btn.disabled = false;
+        updateClocks();
+        persistState();
+        showToast(`Feeds synced at ${appState.lastSyncUtc}`);
+      }, 360);
+    }
+
+    function getFilteredStories() {
+      const q = appState.search.trim().toLowerCase();
+      const filtered = NEWS_ITEMS.filter(function(item) {
+        if (appState.category === `saved`) {
+          if (!appState.savedIds.includes(item.id)) return false;
+        } else if (appState.category !== `all` && item.category !== appState.category) {
+          return false;
+        }
+
+        if (appState.intensity !== `all` && item.intensity !== appState.intensity) {
+          return false;
+        }
+
+        if (q) {
+          const hay = `${item.headline} ${item.summary} ${item.context} ${item.source} ${item.category}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      filtered.sort(function(a, b) {
+        if (appState.sort === `urgency`) {
+          return b.intensityScore - a.intensityScore;
+        }
+        if (appState.sort === `newest`) {
+          return b.timestamp.localeCompare(a.timestamp);
+        }
+        return a.category.localeCompare(b.category) || (b.intensityScore - a.intensityScore);
+      });
+
+      return filtered;
     }
 
     function setCategory(cat) {
       appState.category = cat;
-      renderStories();
+      const btns = document.querySelectorAll(`[data-category]`);
+      btns.forEach(function(b) {
+        b.setAttribute(`aria-pressed`, b.dataset.category === cat ? `true` : `false`);
+      });
+      renderDashboard();
       persistState();
     }
 
     function setIntensity(level) {
       appState.intensity = level;
-      renderStories();
-      persistState();
-    }
-
-    function quickFilterIntensity(level) {
-      if (appState.intensity === level && level !== `all`) {
-        appState.intensity = `all`;
-      } else {
-        appState.intensity = level;
-      }
-      renderStories();
-      persistState();
-    }
-
-    function setSearchQuery(val) {
-      appState.search = val;
-      renderStories();
-      persistState();
-    }
-
-    function clearSearch() {
-      appState.search = ``;
-      renderStories();
-      persistState();
-    }
-
-    function setSortMode(mode) {
-      appState.sort = mode;
-      renderStories();
-      persistState();
-    }
-
-    function toggleBookmarkFilter() {
-      appState.onlySaved = !appState.onlySaved;
-      renderStories();
-      persistState();
-    }
-
-    function toggleStory(id) {
-      const idx = appState.expandedIds.indexOf(id);
-      if (idx >= 0) {
-        appState.expandedIds.splice(idx, 1);
-      } else {
-        appState.expandedIds.push(id);
-      }
-      renderStories();
-      persistState();
-    }
-
-    function toggleBookmark(id) {
-      const idx = appState.savedIds.indexOf(id);
-      if (idx >= 0) {
-        appState.savedIds.splice(idx, 1);
-        showToast(`Removed from Saved`);
-      } else {
-        appState.savedIds.push(id);
-        showToast(`Saved to reading queue`);
-      }
-      renderStories();
-      persistState();
-    }
-
-    function expandAllVisible() {
-      const visible = getFilteredStories();
-      visible.forEach(function(item) {
-        if (!appState.expandedIds.includes(item.id)) {
-          appState.expandedIds.push(item.id);
-        }
+      const btns = document.querySelectorAll(`[data-intensity]`);
+      btns.forEach(function(b) {
+        b.setAttribute(`aria-pressed`, b.dataset.intensity === level ? `true` : `false`);
       });
-      renderStories();
+      renderDashboard();
       persistState();
     }
 
-    function collapseAllVisible() {
-      appState.expandedIds = [];
-      renderStories();
+    function setSortOrder(val) {
+      appState.sort = val;
+      renderDashboard();
       persistState();
     }
 
-    function resetAllFilters() {
-      appState.category = `all`;
-      appState.intensity = `all`;
-      appState.search = ``;
-      appState.sort = `intensity`;
-      appState.onlySaved = false;
-      renderStories();
+    function handleSearchInput(val) {
+      appState.search = val;
+      renderDashboard();
       persistState();
-      showToast(`Filters reset`);
     }
 
-    function copyArticlePath(id, btn) {
-      const story = STORIES.find(function(s) { return s.id === id; });
-      if (!story) return;
-      const text = story.articlePath;
+    function toggleCard(id) {
+      const idx = appState.expandedIds.indexOf(id);
+      if (idx === -1) {
+        appState.expandedIds.push(id);
+      } else {
+        appState.expandedIds.splice(idx, 1);
+      }
+      renderNewsGrid();
+      persistState();
+    }
+
+    function toggleExpandAll() {
+      const visible = getFilteredStories();
+      const allOpen = visible.length > 0 && visible.every(function(s) {
+        return appState.expandedIds.includes(s.id);
+      });
+      if (allOpen) {
+        appState.expandedIds = [];
+      } else {
+        appState.expandedIds = visible.map(function(s) { return s.id; });
+      }
+      renderNewsGrid();
+      persistState();
+    }
+
+    function toggleBookmark(id, evt) {
+      if (evt) evt.stopPropagation();
+      const idx = appState.savedIds.indexOf(id);
+      if (idx === -1) {
+        appState.savedIds.push(id);
+        showToast(`Briefing saved to bookmarks`);
+      } else {
+        appState.savedIds.splice(idx, 1);
+        showToast(`Removed from bookmarks`);
+      }
+      renderDashboard();
+      persistState();
+    }
+
+    function copyCitation(id, evt) {
+      if (evt) evt.stopPropagation();
+      const item = NEWS_ITEMS.find(function(n) { return n.id === id; });
+      if (!item) return;
+      const text = `${item.headline} — ${item.source} (${item.timestamp}) [${item.feedPath}]`;
       if (navigator.clipboard && typeof navigator.clipboard.writeText === `function`) {
         navigator.clipboard.writeText(text).then(function() {
-          if (btn) btn.textContent = `Copied Path`;
-          showToast(`Copied canonical path`);
-          setTimeout(function() {
-            if (btn) btn.textContent = `Copy Article Path`;
-          }, 1800);
+          showToast(`Source citation copied`);
         }).catch(function() {
-          showToast(`Path: ` + text);
+          showToast(`Citation ready: ${item.source}`);
         });
       } else {
-        showToast(`Path: ` + text);
+        showToast(`Citation: ${item.source}`);
       }
     }
 
-    function simulateFeedSync() {
-      const btn = document.getElementById(`sync-btn`);
-      const badgeText = document.getElementById(`live-status-text`);
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = `Polling Feeds…`;
-      }
-      if (badgeText) badgeText.textContent = `SYNCING RSS…`;
-
-      setTimeout(function() {
-        appState.syncCount += 1;
-        const mins = 13 + (appState.syncCount % 45);
-        const paddedMin = String(mins).padStart(2, `0`);
-        appState.lastUpdatedUtc = `2026-11-13 17:` + paddedMin + `:00 UTC`;
-
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = `Refresh Snapshot`;
-        }
-        if (badgeText) badgeText.textContent = `LIVE FEED ACTIVE`;
-        renderControlsState();
-        persistState();
-        showToast(`Synced 21 items · ` + appState.lastUpdatedUtc);
-      }, 360);
-    }
-
-    function exportVisibleCsv() {
-      const visible = sortStories(getFilteredStories());
-      const header = [`Index`, `Category`, `Intensity`, `Published_UTC`, `Outlet`, `Headline`, `Article_Path`];
-      const rows = visible.map(function(s, i) {
-        return [
-          i + 1,
-          CATEGORY_META[s.category].label,
-          INTENSITY_META[s.intensity].label,
-          s.publishedUtc,
-          s.outlet,
-          s.headline,
-          s.articlePath
-        ].map(function(cell) {
-          return `"` + String(cell).replace(/"/g, `""`) + `"`;
-        }).join(`,`);
-      });
-      const csv = [header.join(`,`)].concat(rows).join(`\n`);
+    function exportJsonSnapshot() {
+      const payload = JSON.stringify({
+        exportedAtUtc: formatUtcString(new Date()),
+        lastSyncUtc: appState.lastSyncUtc,
+        activeCategory: appState.category,
+        activeIntensity: appState.intensity,
+        items: getFilteredStories()
+      }, null, 2);
 
       if (window.notebookAppApi && typeof window.notebookAppApi.triggerFileDownload === `function`) {
         window.notebookAppApi.triggerFileDownload({
-          content: csv,
-          contentType: `text/csv`,
+          content: payload,
+          contentType: `text/plain`,
           encoding: `UTF-8`,
-          filename: `live_news_dispatch_2026-11-13.csv`
+          filename: `news-wire-snapshot.json`
         });
-        showToast(`Exported ` + visible.length + ` stories to CSV`);
-      } else {
-        showToast(`CSV export ready (` + visible.length + ` rows)`);
+        showToast(`Exported news-wire-snapshot.json`);
+        return;
       }
+
+      const blob = new Blob([payload], { type: `application/json` });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement(`a`);
+      a.href = url;
+      a.download = `news-wire-snapshot.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(`Exported news-wire-snapshot.json`);
     }
 
-    function scrollToArchitecture() {
-      const el = document.getElementById(`github-pages-spec`);
-      if (el) el.scrollIntoView({ behavior: `smooth` });
+    function getIntensityBadgeHtml(level) {
+      if (level === `critical`) {
+        return `<span class="badge badge-critical">Critical / Breaking</span>`;
+      }
+      if (level === `high`) {
+        return `<span class="badge badge-high">High Intensity</span>`;
+      }
+      return `<span class="badge badge-standard">Standard</span>`;
     }
 
-    async function initApp() {
-      if (window.notebookAppApi && typeof window.notebookAppApi.getAppState === `function`) {
-        try {
-          const saved = await window.notebookAppApi.getAppState();
-          if (saved && typeof saved === `object`) {
-            if (typeof saved.category === `string` && (saved.category === `all` || CATEGORY_META[saved.category])) {
-              appState.category = saved.category;
-            }
-            if (typeof saved.intensity === `string` && (saved.intensity === `all` || INTENSITY_META[saved.intensity])) {
-              appState.intensity = saved.intensity;
-            }
-            if (typeof saved.search === `string`) appState.search = saved.search;
-            if (typeof saved.sort === `string`) appState.sort = saved.sort;
-            if (typeof saved.onlySaved === `boolean`) appState.onlySaved = saved.onlySaved;
-            if (Array.isArray(saved.expandedIds)) appState.expandedIds = saved.expandedIds;
-            if (Array.isArray(saved.savedIds)) appState.savedIds = saved.savedIds;
-            if (typeof saved.lastUpdatedUtc === `string`) appState.lastUpdatedUtc = saved.lastUpdatedUtc;
-            if (typeof saved.syncCount === `number`) appState.syncCount = saved.syncCount;
-          }
-        } catch (err) {
-          // Proceed with default state
+    function getCategoryLabel(cat) {
+      if (cat === `arizona`) return `Arizona`;
+      if (cat === `usa`) return `USA`;
+      if (cat === `world`) return `World`;
+      return `Science`;
+    }
+
+    function updateCountsAndKpis(filtered) {
+      const setTxt = function(id, val) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+      };
+
+      setTxt(`count-all`, NEWS_ITEMS.length);
+      setTxt(`count-science`, NEWS_ITEMS.filter(function(i) { return i.category === `science`; }).length);
+      setTxt(`count-arizona`, NEWS_ITEMS.filter(function(i) { return i.category === `arizona`; }).length);
+      setTxt(`count-usa`, NEWS_ITEMS.filter(function(i) { return i.category === `usa`; }).length);
+      setTxt(`count-world`, NEWS_ITEMS.filter(function(i) { return i.category === `world`; }).length);
+      setTxt(`count-saved`, appState.savedIds.length);
+
+      setTxt(`kpi-total`, NEWS_ITEMS.length);
+      setTxt(`kpi-visible-note`, `${filtered.length} matching active filters`);
+      setTxt(`kpi-critical`, NEWS_ITEMS.filter(function(i) { return i.intensity === `critical`; }).length);
+      setTxt(`kpi-high`, NEWS_ITEMS.filter(function(i) { return i.intensity === `high`; }).length);
+      setTxt(`kpi-saved-count`, `${appState.savedIds.length} bookmarked briefings`);
+
+      const catName = appState.category === `all` ? `ALL DESKS` : appState.category.toUpperCase();
+      const intName = appState.intensity === `all` ? `ALL INTENSITIES` : appState.intensity.toUpperCase();
+      setTxt(`active-filter-readout`, `SHOWING: ${catName} · ${intName}`);
+      setTxt(`feed-result-count`, `${filtered.length} STORIES · CLICK ANY CARD TO EXPAND FULL BRIEFING`);
+
+      const azNotice = document.getElementById(`az-desk-notice`);
+      if (azNotice) {
+        if (appState.category === `arizona`) {
+          azNotice.classList.add(`visible`);
+        } else {
+          azNotice.classList.remove(`visible`);
         }
       }
+    }
 
-      renderStories();
+    function renderNewsGrid() {
+      const grid = document.getElementById(`news-grid`);
+      if (!grid) return;
 
+      const stories = getFilteredStories();
+      updateCountsAndKpis(stories);
+
+      const expandLabel = document.getElementById(`expand-all-label`);
+      if (expandLabel) {
+        const allOpen = stories.length > 0 && stories.every(function(s) {
+          return appState.expandedIds.includes(s.id);
+        });
+        expandLabel.textContent = allOpen ? `Collapse All` : `Expand All`;
+      }
+
+      if (stories.length === 0) {
+        grid.innerHTML = `<div class="empty-state">
+          <h3 class="panel-title">No Dispatches Match Current Filters</h3>
+          <p class="news-summary">Try clearing your search query or switching back to All Desks and All Levels.</p>
+          <button type="button" class="btn btn-primary btn-sm" onclick="resetFilters()">Reset All Filters</button>
+        </div>`;
+        return;
+      }
+
+      grid.innerHTML = stories.map(function(item, index) {
+        const isExpanded = appState.expandedIds.includes(item.id);
+        const isSaved = appState.savedIds.includes(item.id);
+        const idxStr = String(index + 1).padStart(2, `0`);
+        const bulletsHtml = item.bullets.map(function(b) {
+          return `<li>${b}</li>`;
+        }).join(``);
+
+        return `<article class="news-card intensity-${item.intensity}" data-expanded="${isExpanded ? `true` : `false`}">
+          <button type="button" class="news-card-trigger" aria-expanded="${isExpanded ? `true` : `false`}" onclick="toggleCard('${item.id}')">
+            <div class="news-meta-top">
+              <div class="news-badges-left">
+                <span class="index-num">${idxStr}</span>
+                <span class="badge badge-category">${getCategoryLabel(item.category)}</span>
+                ${getIntensityBadgeHtml(item.intensity)}
+                <span class="badge badge-score">INDEX ${item.intensityScore}</span>
+              </div>
+              <span class="news-time">${item.timestamp}</span>
+            </div>
+            <h3 class="news-headline">${item.headline}</h3>
+            <p class="news-summary">${item.summary}</p>
+            <div class="news-footer-bar">
+              <span class="news-source-name">${item.source}</span>
+              <span class="expand-cue">
+                <span>${isExpanded ? `Hide Context` : `Expand Briefing`}</span>
+                <i data-lucide="chevron-down" class="expand-chevron" width="15" height="15" aria-hidden="true"></i>
+              </span>
+            </div>
+          </button>
+
+          <div class="news-dropdown">
+            <div>
+              <div class="dropdown-section-label">Deeper Story Context</div>
+              <p class="dropdown-context">${item.context}</p>
+            </div>
+            <div>
+              <div class="dropdown-section-label">Key Verified Intelligence</div>
+              <ul class="dropdown-bullets">${bulletsHtml}</ul>
+            </div>
+            <div class="dropdown-source-box">
+              <span class="source-ref-text"><strong>Feed Source:</strong> ${item.feedPath}</span>
+              <div class="dropdown-actions">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleBookmark('${item.id}', event)">
+                  <i data-lucide="${isSaved ? `bookmark-check` : `bookmark`}" width="14" height="14" aria-hidden="true"></i>
+                  <span>${isSaved ? `Bookmarked` : `Save`}</span>
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="copyCitation('${item.id}', event)">
+                  <i data-lucide="copy" width="14" height="14" aria-hidden="true"></i>
+                  <span>Copy Citation</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </article>`;
+      }).join(``);
+
+      if (window.lucide && typeof window.lucide.createIcons === `function`) {
+        window.lucide.createIcons();
+      }
+    }
+
+    function resetFilters() {
+      appState.category = `all`;
+      appState.intensity = `all`;
+      appState.search = ``;
+      const searchEl = document.getElementById(`search-input`);
+      if (searchEl) searchEl.value = ``;
+      document.querySelectorAll(`[data-category]`).forEach(function(b) {
+        b.setAttribute(`aria-pressed`, b.dataset.category === `all` ? `true` : `false`);
+      });
+      document.querySelectorAll(`[data-intensity]`).forEach(function(b) {
+        b.setAttribute(`aria-pressed`, b.dataset.intensity === `all` ? `true` : `false`);
+      });
+      renderDashboard();
+      persistState();
+    }
+
+    function renderIntensityChart() {
+      const canvas = document.getElementById(`intensityChart`);
+      if (!canvas || typeof Chart === `undefined`) return;
+
+      const desks = [`science`, `arizona`, `usa`, `world`];
+      const labels = [`Science`, `Arizona`, `USA`, `World`];
+      const countBy = function(cat, level) {
+        return NEWS_ITEMS.filter(function(i) { return i.category === cat && i.intensity === level; }).length;
+      };
+
+      const style = getComputedStyle(document.documentElement);
+      const colCrit = style.getPropertyValue(`--critical`).trim();
+      const colHigh = style.getPropertyValue(`--data-2`).trim();
+      const colStd = style.getPropertyValue(`--data-1`).trim();
+      const colText = style.getPropertyValue(`--on-surface-variant`).trim();
+      const colGrid = style.getPropertyValue(`--outline-variant`).trim();
+
+      if (intensityChartInstance) {
+        intensityChartInstance.destroy();
+      }
+
+      intensityChartInstance = new Chart(canvas, {
+        type: `bar`,
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: `Critical / Breaking`,
+              data: desks.map(function(d) { return countBy(d, `critical`); }),
+              backgroundColor: colCrit,
+              borderRadius: 2
+            },
+            {
+              label: `High Intensity`,
+              data: desks.map(function(d) { return countBy(d, `high`); }),
+              backgroundColor: colHigh,
+              borderRadius: 2
+            },
+            {
+              label: `Standard`,
+              data: desks.map(function(d) { return countBy(d, `standard`); }),
+              backgroundColor: colStd,
+              borderRadius: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              stacked: true,
+              grid: { display: false },
+              ticks: { color: colText, font: { family: `Geist Mono, monospace`, size: 11 } }
+            },
+            y: {
+              stacked: true,
+              beginAtZero: true,
+              ticks: { stepSize: 1, color: colText, font: { family: `Geist Mono, monospace`, size: 11 } },
+              grid: { color: colGrid }
+            }
+          },
+          plugins: {
+            legend: {
+              position: `bottom`,
+              labels: {
+                boxWidth: 12,
+                color: colText,
+                font: { family: `Geist Mono, monospace`, size: 11 }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function setGalleryFilter(cat) {
+      appState.galleryFilter = cat;
+      document.querySelectorAll(`[data-gallery-filter]`).forEach(function(b) {
+        b.setAttribute(`aria-pressed`, b.dataset.galleryFilter === cat ? `true` : `false`);
+      });
+      renderRachelGallery();
+      persistState();
+    }
+
+    function renderRachelGallery() {
+      const grid = document.getElementById(`rachel-gallery-grid`);
+      if (!grid) return;
+
+      const items = RACHEL_GALLERY.filter(function(item) {
+        return appState.galleryFilter === `all` || item.category === appState.galleryFilter;
+      });
+
+      grid.innerHTML = items.map(function(item) {
+        return `<article class="gallery-card">
+          <div class="gallery-plate">
+            ${buildPlateSvg(item.plateType)}
+            <span class="plate-badge-overlay">${item.tag}</span>
+            <span class="plate-res-overlay">${item.res}</span>
+          </div>
+          <div class="gallery-body">
+            <div class="gallery-meta-row">
+              <span class="dossier-meta">${item.date} · @RACHELC00K</span>
+              <span class="badge badge-category">${item.category.toUpperCase()}</span>
+            </div>
+            <h3 class="gallery-title">${item.title}</h3>
+            <p class="gallery-desc">${item.description}</p>
+            <div class="gallery-foot">
+              <span class="source-ref-text">${item.sourceRef}</span>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="openLightbox('${item.id}')">
+                <i data-lucide="maximize-2" width="14" height="14" aria-hidden="true"></i>
+                <span>Inspect High-Res</span>
+              </button>
+            </div>
+          </div>
+        </article>`;
+      }).join(``);
+
+      if (window.lucide && typeof window.lucide.createIcons === `function`) {
+        window.lucide.createIcons();
+      }
+    }
+
+    function openLightbox(id) {
+      const item = RACHEL_GALLERY.find(function(g) { return g.id === id; });
+      const modal = document.getElementById(`gallery-lightbox`);
+      if (!item || !modal) return;
+
+      const titleEl = document.getElementById(`lightbox-title`);
+      const tagEl = document.getElementById(`lightbox-tag`);
+      const visEl = document.getElementById(`lightbox-visual`);
+      const descEl = document.getElementById(`lightbox-desc`);
+      const metaEl = document.getElementById(`lightbox-meta`);
+
+      if (titleEl) titleEl.textContent = item.title;
+      if (tagEl) tagEl.textContent = item.tag;
+      if (visEl) visEl.innerHTML = buildPlateSvg(item.plateType);
+      if (descEl) descEl.textContent = item.description;
+      if (metaEl) metaEl.textContent = `SOURCE: ${item.sourceRef} · STATIC ASSET SLOT: ${item.assetHook}`;
+
+      modal.setAttribute(`aria-hidden`, `false`);
+    }
+
+    function closeLightbox() {
+      const modal = document.getElementById(`gallery-lightbox`);
+      if (modal) modal.setAttribute(`aria-hidden`, `true`);
+    }
+
+    function handleLightboxBackdrop(evt) {
+      if (evt.target && evt.target.id === `gallery-lightbox`) {
+        closeLightbox();
+      }
+    }
+
+    function renderDashboard() {
+      renderNewsGrid();
+      renderRachelGallery();
+    }
+
+    document.addEventListener(`keydown`, function(e) {
+      if (e.key === `Escape`) closeLightbox();
+    });
+
+    async function initDashboard() {
+      try {
+        if (window.notebookAppApi && typeof window.notebookAppApi.getAppState === `function`) {
+          const saved = await window.notebookAppApi.getAppState();
+          if (saved && typeof saved === `object`) {
+            if (saved.category) appState.category = saved.category;
+            if (saved.intensity) appState.intensity = saved.intensity;
+            if (saved.sort) appState.sort = saved.sort;
+            if (typeof saved.search === `string`) appState.search = saved.search;
+            if (saved.galleryFilter) appState.galleryFilter = saved.galleryFilter;
+            if (Array.isArray(saved.expandedIds)) appState.expandedIds = saved.expandedIds;
+            if (Array.isArray(saved.savedIds)) appState.savedIds = saved.savedIds;
+            if (saved.lastSyncUtc) appState.lastSyncUtc = saved.lastSyncUtc;
+            if (saved.syncEpochMs) appState.syncEpochMs = saved.syncEpochMs;
+          }
+        }
+      } catch (err) {
+        /* Proceed with default state */
+      }
+
+      const searchEl = document.getElementById(`search-input`);
+      if (searchEl) searchEl.value = appState.search;
+      const sortEl = document.getElementById(`sort-select`);
+      if (sortEl) sortEl.value = appState.sort;
+      const updatedEl = document.getElementById(`last-updated-utc`);
+      if (updatedEl) updatedEl.textContent = appState.lastSyncUtc;
+
+      document.querySelectorAll(`[data-category]`).forEach(function(b) {
+        b.setAttribute(`aria-pressed`, b.dataset.category === appState.category ? `true` : `false`);
+      });
+      document.querySelectorAll(`[data-intensity]`).forEach(function(b) {
+        b.setAttribute(`aria-pressed`, b.dataset.intensity === appState.intensity ? `true` : `false`);
+      });
+      document.querySelectorAll(`[data-gallery-filter]`).forEach(function(b) {
+        b.setAttribute(`aria-pressed`, b.dataset.galleryFilter === appState.galleryFilter ? `true` : `false`);
+      });
+
+      renderDashboard();
+      renderIntensityChart();
+      updateClocks();
+      setInterval(updateClocks, 1000);
+
+      if (window.lucide && typeof window.lucide.createIcons === `function`) {
+        window.lucide.createIcons();
+      }
       if (window.notebookAppApi && typeof window.notebookAppApi.notifyAppReady === `function`) {
         window.notebookAppApi.notifyAppReady();
       }
     }
 
-    document.addEventListener(`DOMContentLoaded`, initApp);
+    initDashboard();
   </script>
 </body>
 </html>
